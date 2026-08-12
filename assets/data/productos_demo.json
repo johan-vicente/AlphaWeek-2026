@@ -1,0 +1,564 @@
+{
+  "productos": [
+    {
+      "codigo_barra": "A2100003098658",
+      "nombre": "Soya Aceite Wala 1.5 Lt",
+      "tipo_venta": "empacado",
+      "precio": 207.0,
+      "categoria": "Despensa / Aceites",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/159857-800-800?v=639087861057330000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003109071",
+      "nombre": "Cloro Wala 1/2 Gl",
+      "tipo_venta": "empacado",
+      "precio": 65.0,
+      "categoria": "Limpieza y Desechables / Cloros y Desinfectantes",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/156143-800-800?v=639060213035830000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003227041",
+      "nombre": "Arroz Wala Premium 10 Lb",
+      "tipo_venta": "empacado",
+      "precio": 348.0,
+      "categoria": "Despensa / Arroz",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/155580-800-800?v=639044649028130000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002978111",
+      "nombre": "Pan Blanco Wala Viga Med 820 G",
+      "tipo_venta": "empacado",
+      "precio": 105.0,
+      "categoria": "Panadería y Repostería / Pan Molde",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/167432-800-800?v=639118101006800000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002977169",
+      "nombre": "Leche Evaporada Wala 377 G",
+      "tipo_venta": "empacado",
+      "precio": 64.0,
+      "categoria": "Lácteos y Huevos / Leche Evaporada",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/166988-800-800?v=639114792096470000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002977091",
+      "nombre": "Salami Súper Especial Wala 2 Lb",
+      "tipo_venta": "empacado",
+      "precio": 235.0,
+      "categoria": "Quesos y Embutidos / Salami",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/176642-800-800?v=639187077338300000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003071576",
+      "nombre": "Papel Toalla Zerca 136 Hojas",
+      "tipo_venta": "empacado",
+      "precio": 70.0,
+      "categoria": "Limpieza y Desechables / Papel toalla y servilletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/163329-800-800?v=639100653897670000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003433084",
+      "nombre": "Toallitas Húmedas Wala Avena 80 Un",
+      "tipo_venta": "empacado",
+      "precio": 119.0,
+      "categoria": "Bebé / Toallas Húmedas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/176800-800-800?v=639195018022400000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002981128",
+      "nombre": "Café Wala 400 Gr",
+      "tipo_venta": "empacado",
+      "precio": 330.0,
+      "categoria": "Despensa / Café",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/165280-800-800?v=639105867313870000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003151728",
+      "nombre": "Leche Entera Wala 3.1% Grasa 1 Litro",
+      "tipo_venta": "empacado",
+      "precio": 59.0,
+      "categoria": "Lácteos y Huevos / Leche Líquida",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/167411-800-800?v=639118074021730000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002989223",
+      "nombre": "Sandwich Integral Jamón y Queso Frío",
+      "tipo_venta": "empacado",
+      "precio": 165.0,
+      "categoria": "Listo para Comer / Sándwich, Wraps y Ensaladas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157548-800-800?v=639070303294900000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003235848",
+      "nombre": "Galleta De Soda Wala 20/1 600 Gr",
+      "tipo_venta": "empacado",
+      "precio": 148.0,
+      "categoria": "Galletas y Dulces / Galletas Sodas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/159533-800-800?v=639087835111000000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003039811",
+      "nombre": "Azúcar Crema Wala 5 Lb",
+      "tipo_venta": "empacado",
+      "precio": 157.0,
+      "categoria": "Despensa / Azúcar",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/155788-800-800?v=639059025021300000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003339904",
+      "nombre": "Cerveza Wala 330 Ml",
+      "tipo_venta": "empacado",
+      "precio": 474.0,
+      "categoria": "Vinos, licores y cervezas / Cervezas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/162682-800-800?v=639098904005600000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2018212",
+      "nombre": "Queso Mozzarella Wala Barra Lb",
+      "tipo_venta": "empacado",
+      "precio": 214.0,
+      "categoria": "Quesos y Embutidos / Quesos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/170234-800-800?v=639127296022330000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "02244",
+      "nombre": "Limón Persa Lb",
+      "tipo_venta": "peso_variable",
+      "precio_por_libra": 53.0,
+      "categoria": "Frutas y Vegetales / Frutas Frescas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/175026-800-800?v=639154032042130000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A00002",
+      "nombre": "Plátano Verde Und",
+      "tipo_venta": "empacado",
+      "precio": 18.0,
+      "categoria": "Frutas y Vegetales / Víveres",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/176004-800-800?v=639172242041270000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003039798",
+      "nombre": "Azúcar Crema Wala 2 Lb",
+      "tipo_venta": "empacado",
+      "precio": 71.0,
+      "categoria": "Despensa / Azúcar",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/159506-800-800?v=639087835010900000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003039804",
+      "nombre": "Azúcar Refinada Wala 2 Lb",
+      "tipo_venta": "empacado",
+      "precio": 78.0,
+      "categoria": "Despensa / Azúcar",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/155785-800-800?v=639059022011070000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003109033",
+      "nombre": "Cloro Wala 1 Gl",
+      "tipo_venta": "empacado",
+      "precio": 95.0,
+      "categoria": "Limpieza y Desechables / Cloros y Desinfectantes",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157243-800-800?v=639070299106870000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002978456",
+      "nombre": "Papel Higiénico Wala 12 Un",
+      "tipo_venta": "empacado",
+      "precio": 200.0,
+      "categoria": "Limpieza y Desechables / Desechables",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/164596-800-800?v=639105019196500000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002978463",
+      "nombre": "Papel Higiénico Wala 24 Un",
+      "tipo_venta": "empacado",
+      "precio": 399.0,
+      "categoria": "Limpieza y Desechables / Desechables",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/164598-800-800?v=639105019208200000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003052995",
+      "nombre": "Servilletas Cuadrada 250/1 Wala",
+      "tipo_venta": "empacado",
+      "precio": 96.0,
+      "categoria": "Limpieza y Desechables / Papel toalla y servilletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/165077-800-800?v=639105023588400000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003052971",
+      "nombre": "Servilletas Dispenser 500/1 Wala",
+      "tipo_venta": "empacado",
+      "precio": 96.0,
+      "categoria": "Limpieza y Desechables / Papel toalla y servilletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/165078-800-800?v=639105023591970000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003075567",
+      "nombre": "Papel Toalla Reutilizable Wala 80H",
+      "tipo_venta": "empacado",
+      "precio": 120.0,
+      "categoria": "Limpieza y Desechables / Papel toalla y servilletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/165002-800-800?v=639105023189030000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2018249",
+      "nombre": "Queso Gouda Wala 6.6 Lb",
+      "tipo_venta": "empacado",
+      "precio": 245.0,
+      "categoria": "Quesos y Embutidos / Quesos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/168837-800-800?v=639120712545730000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002978128",
+      "nombre": "Huevos Grandes Wala 30 Unidades",
+      "tipo_venta": "empacado",
+      "precio": 195.0,
+      "categoria": "Lácteos y Huevos / Huevos Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/176562-800-800?v=639186417029800000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7468707680261",
+      "nombre": "Huevos Endy Extra Grande 30 Uds",
+      "tipo_venta": "empacado",
+      "precio": 295.0,
+      "categoria": "Lácteos y Huevos / Huevos Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/156788-800-800?v=639065844015170000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7468707680643",
+      "nombre": "Huevos Endy Extra Grande 18 Uds",
+      "tipo_venta": "empacado",
+      "precio": 189.0,
+      "categoria": "Lácteos y Huevos / Huevos Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/155633-800-800?v=639052518021600000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7462104206031",
+      "nombre": "Huevos Don Papito Grandes 30 Uds",
+      "tipo_venta": "empacado",
+      "precio": 280.0,
+      "categoria": "Lácteos y Huevos / Huevos Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157569-800-800?v=639070303392870000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7460111171137",
+      "nombre": "Leche Listamilk UHT Rica 1 Lt",
+      "tipo_venta": "empacado",
+      "precio": 78.0,
+      "categoria": "Lácteos y Huevos / Leche Líquida",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/160259-800-800?v=639090402193400000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7460123472215",
+      "nombre": "Leche Evaporada Carnation UHT 290 Ml",
+      "tipo_venta": "empacado",
+      "precio": 59.0,
+      "categoria": "Lácteos y Huevos / Leche Evaporada",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157233-800-800?v=639070299027000000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A8410297604379",
+      "nombre": "Crema De Leche Wala 200 Ml",
+      "tipo_venta": "empacado",
+      "precio": 64.0,
+      "categoria": "Lácteos y Huevos / Cremas Lácteas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/163077-800-800?v=639100534850100000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7466772500248",
+      "nombre": "Mantequilla Sosúa Pasteurizada 1 Lb",
+      "tipo_venta": "empacado",
+      "precio": 330.0,
+      "categoria": "Lácteos y Huevos / Mantequilla y Margarina",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157114-800-800?v=639069615015200000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7460111104081",
+      "nombre": "Leche Rica Semidescremada Sin Lactosa 2% 1 Lt",
+      "tipo_venta": "empacado",
+      "precio": 84.0,
+      "categoria": "Lácteos y Huevos / Leche Líquida",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/168867-800-800?v=639120712690630000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003109330",
+      "nombre": "Jabón Cuaba Zerca Líq 1 Gl",
+      "tipo_venta": "empacado",
+      "precio": 219.0,
+      "categoria": "Limpieza y Desechables / Cuidado de la Ropa",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157761-800-800?v=639072222373700000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100002990427",
+      "nombre": "Funda Cocina Negra Paq Zerca 15 Un",
+      "tipo_venta": "empacado",
+      "precio": 49.0,
+      "categoria": "Limpieza y Desechables / Desechables",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/164630-800-800?v=639105019451730000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003098979",
+      "nombre": "Detergente En Polvo Zerca 5 Lb",
+      "tipo_venta": "empacado",
+      "precio": 199.0,
+      "categoria": "Limpieza y Desechables / Cuidado de la Ropa",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157723-800-800?v=639072222217830000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7467581603274",
+      "nombre": "Galletas De Soda Hatuey Regular 20 Unds",
+      "tipo_venta": "empacado",
+      "precio": 169.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/170372-800-800?v=639130053014170000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7467581603847",
+      "nombre": "Galletas De Soda Hatuey Regular 11.8 Oz",
+      "tipo_venta": "empacado",
+      "precio": 100.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/162939-800-800?v=639100534179130000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7622201383572",
+      "nombre": "Galletas Dulces Oreo Regular 12 Und",
+      "tipo_venta": "empacado",
+      "precio": 205.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/162503-800-800?v=639096339107030000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A051228637134",
+      "nombre": "Galletas Saladitas Guarina 12 Uds",
+      "tipo_venta": "empacado",
+      "precio": 56.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/165349-800-800?v=639105870239500000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7467581604295",
+      "nombre": "Galleta Waffer Guarina Limón 10/1",
+      "tipo_venta": "empacado",
+      "precio": 92.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/157033-800-800?v=639065952062400000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A764090024031",
+      "nombre": "Chocolate Embajador 10/1 260 Gr",
+      "tipo_venta": "empacado",
+      "precio": 117.0,
+      "categoria": "Galletas y Dulces / Chocolates",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/162949-800-800?v=639100534242430000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7622201717537",
+      "nombre": "Galletas Club Social Saladas 234 Gr",
+      "tipo_venta": "empacado",
+      "precio": 88.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/174559-800-800?v=639150627038870000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A2100003095800",
+      "nombre": "Galletas Wala Saladas Tipo Club 9/1",
+      "tipo_venta": "empacado",
+      "precio": 54.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/162600-800-800?v=639096342341900000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7622210854209",
+      "nombre": "Galletas Integral Multicereal Club Social 26 Gr",
+      "tipo_venta": "empacado",
+      "precio": 88.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/162912-800-800?v=639100534046970000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A051228637349",
+      "nombre": "Galleta Sandwich Vainilla 12/1 Dino",
+      "tipo_venta": "empacado",
+      "precio": 154.0,
+      "categoria": "Galletas y Dulces / Galletas",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/160258-800-800?v=639090402187100000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "01004",
+      "nombre": "Cebolla Roja Criolla Lb",
+      "tipo_venta": "peso_variable",
+      "precio_por_libra": 46.0,
+      "categoria": "Frutas y Vegetales / Víveres",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/175368-800-800?v=639155766010370000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "01008",
+      "nombre": "Papas Selectas Lb",
+      "tipo_venta": "peso_variable",
+      "precio_por_libra": 46.0,
+      "categoria": "Frutas y Vegetales / Víveres",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/161852-800-800?v=639096165347030000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A1001401",
+      "nombre": "Zanahoria Fresca Lb",
+      "tipo_venta": "peso_variable",
+      "precio_por_libra": 26.0,
+      "categoria": "Frutas y Vegetales / Vegetales Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/175046-800-800?v=639154041045300000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "A7468827171458",
+      "nombre": "Cilantrico Por Paquete",
+      "tipo_venta": "empacado",
+      "precio": 48.0,
+      "categoria": "Frutas y Vegetales / Vegetales Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/161910-800-800?v=639096165707430000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": null,
+      "nombre": "Ajo Selecto Paquete 4 Uds",
+      "tipo_venta": "empacado",
+      "precio": 60.0,
+      "categoria": "Frutas y Vegetales / Vegetales Frescos",
+      "imagen_url": null,
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "02064",
+      "nombre": "Tomate Bugalu Lb",
+      "tipo_venta": "peso_variable",
+      "precio_por_libra": 47.0,
+      "categoria": "Frutas y Vegetales / Vegetales Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/175348-800-800?v=639154950013800000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "02033",
+      "nombre": "Guineo Verde Lb",
+      "tipo_venta": "peso_variable",
+      "precio_por_libra": 17.0,
+      "categoria": "Frutas y Vegetales / Víveres",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/175036-800-800?v=639154035099930000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    },
+    {
+      "codigo_barra": "02002",
+      "nombre": "Ají Cubanela Verde Lb",
+      "tipo_venta": "peso_variable",
+      "precio_por_libra": 54.0,
+      "categoria": "Frutas y Vegetales / Vegetales Frescos",
+      "imagen_url": "https://gruporamos.vtexassets.com/arquivos/ids/175371-800-800?v=639155820019100000&width=800&height=800&aspect=true",
+      "sucursales": [],
+      "productos_similares": []
+    }
+  ]
+}
