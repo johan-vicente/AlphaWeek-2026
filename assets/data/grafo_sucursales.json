@@ -1,0 +1,61 @@
+{
+  "sucursales": {
+    "villa_mella": { "nodos": {
+      "n1":  { "tipo": "entrada",       "x": 50,  "y": 0,   "conexiones": ["n2"] },
+      "n2":  { "tipo": "interseccion",  "x": 50,  "y": 100, "conexiones": ["n1","n3","n7","n11"] },
+      "n3":  { "tipo": "interseccion",  "x": 50,  "y": 200, "conexiones": ["n2","n4","n8","n12"] },
+      "n4":  { "tipo": "interseccion",  "x": 50,  "y": 300, "conexiones": ["n3","n5","n9","n13"] },
+      "n5":  { "tipo": "interseccion",  "x": 50,  "y": 400, "conexiones": ["n4","n6","n10","n14"] },
+      "n6":  { "tipo": "salida",        "x": 50,  "y": 500, "conexiones": ["n5","n15","n16","n17"] },
+      "n7":  { "tipo": "zona_despensa",            "x": 150, "y": 100, "conexiones": ["n2"] },
+      "n8":  { "tipo": "zona_lacteos_huevos",      "x": 150, "y": 200, "conexiones": ["n3"] },
+      "n9":  { "tipo": "zona_galletas_dulces",     "x": 150, "y": 300, "conexiones": ["n4"] },
+      "n10": { "tipo": "zona_frutas_vegetales",    "x": 150, "y": 400, "conexiones": ["n5"] },
+      "n11": { "tipo": "zona_limpieza",            "x": -50, "y": 100, "conexiones": ["n2"] },
+      "n12": { "tipo": "zona_quesos_embutidos",    "x": -50, "y": 200, "conexiones": ["n3"] },
+      "n13": { "tipo": "zona_panaderia",           "x": -50, "y": 300, "conexiones": ["n4"] },
+      "n14": { "tipo": "zona_bebidas",             "x": -50, "y": 400, "conexiones": ["n5"] },
+      "n15": { "tipo": "caja", "x": 20, "y": 480, "conexiones": ["n6"] },
+      "n16": { "tipo": "caja", "x": 50, "y": 480, "conexiones": ["n6"] },
+      "n17": { "tipo": "caja", "x": 80, "y": 480, "conexiones": ["n6"] }
+    }},
+    "las_americas": { "nodos": {
+      "n1":  { "tipo": "entrada",       "x": 50,  "y": 0,   "conexiones": ["n2"] },
+      "n2":  { "tipo": "interseccion",  "x": 50,  "y": 100, "conexiones": ["n1","n3","n7","n11"] },
+      "n3":  { "tipo": "interseccion",  "x": 50,  "y": 200, "conexiones": ["n2","n4","n8","n12"] },
+      "n4":  { "tipo": "interseccion",  "x": 50,  "y": 300, "conexiones": ["n3","n5","n9","n13"] },
+      "n5":  { "tipo": "interseccion",  "x": 50,  "y": 400, "conexiones": ["n4","n6","n10","n14"] },
+      "n6":  { "tipo": "salida",        "x": 50,  "y": 500, "conexiones": ["n5","n15","n16","n17"] },
+      "n7":  { "tipo": "zona_despensa",            "x": 150, "y": 100, "conexiones": ["n2"] },
+      "n8":  { "tipo": "zona_lacteos_huevos",      "x": 150, "y": 200, "conexiones": ["n3"] },
+      "n9":  { "tipo": "zona_galletas_dulces",     "x": 150, "y": 300, "conexiones": ["n4"] },
+      "n10": { "tipo": "zona_frutas_vegetales",    "x": 150, "y": 400, "conexiones": ["n5"] },
+      "n11": { "tipo": "zona_limpieza",            "x": -50, "y": 100, "conexiones": ["n2"] },
+      "n12": { "tipo": "zona_quesos_embutidos",    "x": -50, "y": 200, "conexiones": ["n3"] },
+      "n13": { "tipo": "zona_panaderia",           "x": -50, "y": 300, "conexiones": ["n4"] },
+      "n14": { "tipo": "zona_bebidas",             "x": -50, "y": 400, "conexiones": ["n5"] },
+      "n15": { "tipo": "caja", "x": 20, "y": 480, "conexiones": ["n6"] },
+      "n16": { "tipo": "caja", "x": 50, "y": 480, "conexiones": ["n6"] },
+      "n17": { "tipo": "caja", "x": 80, "y": 480, "conexiones": ["n6"] }
+    }},
+    "autopista_san_isidro": { "nodos": {
+      "n1":  { "tipo": "entrada",       "x": 50,  "y": 0,   "conexiones": ["n2"] },
+      "n2":  { "tipo": "interseccion",  "x": 50,  "y": 100, "conexiones": ["n1","n3","n7","n11"] },
+      "n3":  { "tipo": "interseccion",  "x": 50,  "y": 200, "conexiones": ["n2","n4","n8","n12"] },
+      "n4":  { "tipo": "interseccion",  "x": 50,  "y": 300, "conexiones": ["n3","n5","n9","n13"] },
+      "n5":  { "tipo": "interseccion",  "x": 50,  "y": 400, "conexiones": ["n4","n6","n10","n14"] },
+      "n6":  { "tipo": "salida",        "x": 50,  "y": 500, "conexiones": ["n5","n15","n16","n17"] },
+      "n7":  { "tipo": "zona_despensa",            "x": 150, "y": 100, "conexiones": ["n2"] },
+      "n8":  { "tipo": "zona_lacteos_huevos",      "x": 150, "y": 200, "conexiones": ["n3"] },
+      "n9":  { "tipo": "zona_galletas_dulces",     "x": 150, "y": 300, "conexiones": ["n4"] },
+      "n10": { "tipo": "zona_frutas_vegetales",    "x": 150, "y": 400, "conexiones": ["n5"] },
+      "n11": { "tipo": "zona_limpieza",            "x": -50, "y": 100, "conexiones": ["n2"] },
+      "n12": { "tipo": "zona_quesos_embutidos",    "x": -50, "y": 200, "conexiones": ["n3"] },
+      "n13": { "tipo": "zona_panaderia",           "x": -50, "y": 300, "conexiones": ["n4"] },
+      "n14": { "tipo": "zona_bebidas",             "x": -50, "y": 400, "conexiones": ["n5"] },
+      "n15": { "tipo": "caja", "x": 20, "y": 480, "conexiones": ["n6"] },
+      "n16": { "tipo": "caja", "x": 50, "y": 480, "conexiones": ["n6"] },
+      "n17": { "tipo": "caja", "x": 80, "y": 480, "conexiones": ["n6"] }
+    }}
+  }
+}

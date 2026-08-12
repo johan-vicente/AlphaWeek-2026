@@ -23,3 +23,18 @@ Future<void> cargarProductosDesdeAssets() async {
 
   print('Carga completa: $cargados productos cargados, $saltados saltados por falta de código.');
 }
+
+Future<void> cargarGrafoDesdeAssets() async {
+  final String jsonString = await rootBundle.loadString('assets/data/grafo_sucursales.json');
+  final Map<String, dynamic> data = json.decode(jsonString);
+  final Map<String, dynamic> sucursales = data['sucursales'];
+
+  final db = FirebaseDatabase.instance.ref();
+
+  for (final entry in sucursales.entries) {
+    final sucursalId = entry.key;
+    final nodos = entry.value['nodos'];
+    await db.child('sucursales/$sucursalId/grafo/nodos').set(nodos);
+    print('Grafo cargado para: $sucursalId');
+  }
+}
