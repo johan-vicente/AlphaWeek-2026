@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1052197969441",
+    "project_id": "sirena-alphaweek",
+    "storage_bucket": "sirena-alphaweek.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1052197969441:android:808e40bdf518120bd44d60",
+        "android_client_info": {
+          "package_name": "com.gruporamos.sirena_alphaweek"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQmNXQy6tpHQ6wqC0LeQtHNlNa6-gEaJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
