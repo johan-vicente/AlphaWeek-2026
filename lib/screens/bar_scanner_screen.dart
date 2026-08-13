@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -21,24 +20,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     ],
   );
 
-  bool _isPermissionGranted = false;
-  bool _isLoadingPermission = true;
   bool _isProcessingCode = false; // Previene lecturas duplicadas continuas
-
-  @override
-  void initState() {
-    super.initState();
-    _checkCameraPermission();
-  }
-
-  /// Solicita y verifica el permiso de cámara
-  Future<void> _checkCameraPermission() async {
-    final status = await Permission.camera.request();
-    setState(() {
-      _isPermissionGranted = status.isGranted;
-      _isLoadingPermission = false;
-    });
-  }
 
   /// Maneja la captura del código de barras
   void _onBarcodeDetected(BarcodeCapture capture) {
@@ -56,7 +38,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
         // Detener el escáner al encontrar un código
         _scannerController.stop();
 
-        // Retornar el código a la pantalla anterior o navegar al detalle
+        // Retornar el código a la pantalla anterior
         Navigator.pop(context, scannedCode);
         break;
       }
@@ -122,6 +104,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                     return const Icon(Icons.flash_off, color: Colors.grey);
                   case TorchState.on:
                     return const Icon(Icons.flash_on, color: Colors.yellow);
+                  default:
+                    return const Icon(Icons.flash_off, color: Colors.grey);
                 }
               },
             ),
@@ -129,93 +113,91 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Stack(
+        children: [
+          // 1. Feed de la cámara con manejo automático de errores/permisos
+          MobileScanner(
+            controller: _scannerController,
+            onDetect: _onBarcodeDetected,
+            errorBuilder: (context, error, child) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(
+                        _getErrorMessage(error.errorCode),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _showManualInputDialog,
+                        icon: const Icon(Icons.keyboard),
+                        label: const Text('Ingresar código manualmente'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // 2. Máscara visual con visor centrado
+          CustomPaint(
+            painter: ScannerOverlayPainter(),
+            child: const SizedBox.expand(),
+          ),
+
+          // 3. Indicaciones e Ingreso manual inferior
+          Positioned(
+            bottom: 40,
+            left: 20,
+            right: 20,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Apunta la cámara al código de barras',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: _showManualInputDialog,
+                  icon: const Icon(Icons.keyboard),
+                  label: const Text('¿Problemas para escanear? Entrada manual'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoadingPermission) {
-      return const Center(child: CircularProgressIndicator());
+  String _getErrorMessage(MobileScannerErrorCode errorCode) {
+    switch (errorCode) {
+      case MobileScannerErrorCode.permissionDenied:
+        return 'Permiso de cámara denegado. Por favor conéctalo en los ajustes de tu dispositivo.';
+      case MobileScannerErrorCode.unsupported:
+        return 'No se encontró una cámara en este dispositivo.';
+      default:
+        return 'Ocurrió un error al cargar la cámara.';
     }
-
-    if (!_isPermissionGranted) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text(
-                'Se requiere permiso de cámara para escanear productos.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _checkCameraPermission,
-                child: const Text('Conceder Permiso'),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: _showManualInputDialog,
-                child: const Text('Ingresar código manualmente'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Stack(
-      children: [
-        // 1. Feed de la cámara
-        MobileScanner(
-          controller: _scannerController,
-          onDetect: _onBarcodeDetected,
-        ),
-
-        // 2. Máscara visual con visor centrado
-        CustomPaint(
-          painter: ScannerOverlayPainter(),
-          child: const SizedBox.expand(),
-        ),
-
-        // 3. Indicaciones e Ingreso manual inferior
-        Positioned(
-          bottom: 40,
-          left: 20,
-          right: 20,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Apunta la cámara al código de barras',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black87,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                onPressed: _showManualInputDialog,
-                icon: const Icon(Icons.keyboard),
-                label: const Text('¿Problemas para escanear? Entrada manual'),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 }
 
