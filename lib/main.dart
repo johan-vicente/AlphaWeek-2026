@@ -44,18 +44,45 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _openScanner() async {
-    final String? scannedBarcode = await Navigator.push<String>(
+    final dynamic result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const BarcodeScannerScreen(),
       ),
     );
 
-    if (scannedBarcode != null && scannedBarcode.isNotEmpty && mounted) {
+    if (result == null || !mounted) return;
+
+    if (result is String && result.isNotEmpty) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProductResultScreen(barcode: scannedBarcode),
+          builder: (context) => ProductResultScreen(barcode: result),
+        ),
+      );
+    } else if (result is Map<String, dynamic>) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(result['producto'].nombre),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Peso: ${result['libras']} lb'),
+              const SizedBox(height: 8),
+              Text(
+                'Total a pagar: \$${(result['total'] as double).toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
     }

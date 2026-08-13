@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'variable_weight_dialog.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -20,9 +21,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     ],
   );
 
-  bool _isProcessingCode = false; // Previene lecturas duplicadas continuas
+  bool _isProcessingCode = false;
 
-  /// Maneja la captura del código de barras
   void _onBarcodeDetected(BarcodeCapture capture) {
     if (_isProcessingCode) return;
 
@@ -34,24 +34,22 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
         });
 
         final String scannedCode = barcode.rawValue!;
-
-        // Detener el escáner al encontrar un código
         _scannerController.stop();
 
-        // Retornar el código a la pantalla anterior
-        Navigator.pop(context, scannedCode);
+        if (mounted) {
+          Navigator.pop(context, scannedCode);
+        }
         break;
       }
     }
   }
 
-  /// Diálogo para la entrada manual del código
   void _showManualInputDialog() {
     final TextEditingController manualCodeController = TextEditingController();
 
-    showDialog(
+    showDialog<String>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Entrada manual'),
           content: TextField(
@@ -64,15 +62,14 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
                 final code = manualCodeController.text.trim();
                 if (code.isNotEmpty) {
-                  Navigator.pop(context); // Cierra el diálogo
-                  Navigator.pop(context, code); // Retorna el código a la vista previa
+                  Navigator.pop(dialogContext, code);
                 }
               },
               child: const Text('Aceptar'),
@@ -80,7 +77,26 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           ],
         );
       },
+    ).then((code) {
+      if (code != null && code.isNotEmpty && mounted) {
+        Navigator.pop(context, code);
+      }
+    });
+  }
+
+  void _showVariableWeightModal() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => const VariableWeightDialog(),
     );
+
+    if (result != null && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pop(context, result);
+        }
+      });
+    }
   }
 
   @override
@@ -99,14 +115,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             icon: ValueListenableBuilder(
               valueListenable: _scannerController,
               builder: (context, state, child) {
-                switch (state.torchState) {
-                  case TorchState.off:
-                    return const Icon(Icons.flash_off, color: Colors.grey);
-                  case TorchState.on:
-                    return const Icon(Icons.flash_on, color: Colors.yellow);
-                  default:
-                    return const Icon(Icons.flash_off, color: Colors.grey);
-                }
+                final isTorchOn = state.torchState == TorchState.on;
+                return Icon(
+                  isTorchOn ? Icons.flash_on : Icons.flash_off,
+                  color: isTorchOn ? Colors.yellow : Colors.grey,
+                );
               },
             ),
             onPressed: () => _scannerController.toggleTorch(),
@@ -115,7 +128,6 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       ),
       body: Stack(
         children: [
-          // 1. Feed de la cámara con manejo automático de errores/permisos
           MobileScanner(
             controller: _scannerController,
             onDetect: _onBarcodeDetected,
@@ -145,16 +157,12 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
               );
             },
           ),
-
-          // 2. Máscara visual con visor centrado
           CustomPaint(
             painter: ScannerOverlayPainter(),
             child: const SizedBox.expand(),
           ),
-
-          // 3. Indicaciones e Ingreso manual inferior
           Positioned(
-            bottom: 40,
+            bottom: 30,
             left: 20,
             right: 20,
             child: Column(
@@ -170,16 +178,35 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                     style: TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  onPressed: _showManualInputDialog,
-                  icon: const Icon(Icons.keyboard),
-                  label: const Text('¿Problemas para escanear? Entrada manual'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black87,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: _showManualInputDialog,
+                        icon: const Icon(Icons.keyboard, size: 18),
+                        label: const Text('Manual', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.lightGreenAccent.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: _showVariableWeightModal,
+                        icon: const Icon(Icons.scale, size: 18),
+                        label: const Text('Por Peso (lb)', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -192,16 +219,15 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   String _getErrorMessage(MobileScannerErrorCode errorCode) {
     switch (errorCode) {
       case MobileScannerErrorCode.permissionDenied:
-        return 'Permiso de cámara denegado. Por favor conéctalo en los ajustes de tu dispositivo.';
+        return 'Permiso de cámara denegado. Por favor concédelo en los ajustes de tu dispositivo.';
       case MobileScannerErrorCode.unsupported:
-        return 'No se encontró una cámara en este dispositivo.';
+        return 'No se encontró una cámara disponible en este dispositivo.';
       default:
         return 'Ocurrió un error al cargar la cámara.';
     }
   }
 }
 
-/// Diseña el marco de escaneo (cuadro delimitador visual)
 class ScannerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -213,7 +239,6 @@ class ScannerOverlayPainter extends CustomPainter {
       height: scanBoxHeight,
     );
 
-    // Fondo semitransparente oscuro
     final Paint backgroundPaint = Paint()..color = Colors.black.withOpacity(0.5);
 
     final Path backgroundPath = Path()
@@ -223,7 +248,6 @@ class ScannerOverlayPainter extends CustomPainter {
 
     canvas.drawPath(backgroundPath, backgroundPaint);
 
-    // Borde del cuadro de escaneo
     final Paint borderPaint = Paint()
       ..color = Colors.greenAccent
       ..style = PaintingStyle.stroke
