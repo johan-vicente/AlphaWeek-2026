@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../services/firebase_service.dart';
 import '../models/producto.dart';
+import '../models/sucursal.dart';
 import '../services/cart_service.dart';
 import 'variable_weight_dialog.dart';
 import 'cart_screen.dart';
 import '../utils/app_colors.dart';
+import '../widgets/header_sirena.dart';
+import 'home_screen.dart';
+import '../widgets/menu_entrada_popup.dart';
 
 class ProductResultScreen extends StatefulWidget {
   final String barcode;
@@ -43,27 +48,53 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
     }
   }
 
+  /// Convierte un valor de _producto!.sucursales (id string o map) en el nombre real de la sucursal
+  String _nombreSucursal(dynamic valor) {
+    if (valor is Map) {
+      return valor['nombre']?.toString() ?? valor.toString();
+    }
+    final id = valor.toString();
+    final coincidencias = SucursalesData.sucursales.where((s) => s.id == id);
+    return coincidencias.isNotEmpty ? coincidencias.first.nombre : id;
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: CartService(),
       builder: (context, child) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Detalle del Producto'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CartScreen()),
-                  );
-                },
-              ),
-            ],
+          backgroundColor: AppColors.blanco,
+          body: SafeArea(
+            child: Column(
+              children: [
+                HeaderSirena(
+                  onLogoTap: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                          (route) => false,
+                    );
+                  },
+                  onMenuTap: () {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      barrierColor: Colors.black54,
+                      builder: (context) => const MenuEntradaPopup(),
+                    );
+                  },
+                  onBarcodeTap: () => Navigator.pop(context),
+                  onCartTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CartScreen()),
+                    );
+                  },
+                ),
+                Expanded(child: _buildBody()),
+              ],
+            ),
           ),
-          body: _buildBody(),
           bottomNavigationBar: _producto != null && !_isLoading ? _buildBottomBar() : null,
         );
       },
@@ -88,51 +119,51 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
       ),
       child: isInCart
           ? Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: const BorderSide(color: Colors.red),
-                    ),
-                    icon: const Icon(Icons.remove_shopping_cart, color: Colors.red),
-                    label: const Text('Remover', style: TextStyle(color: Colors.red, fontSize: 16)),
-                    onPressed: () {
-                      cartService.removeItemByBarcode(widget.barcode);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${_producto!.nombre} removido del carrito')),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.azulSirena,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    icon: const Icon(Icons.shopping_cart_checkout, color: AppColors.blanco),
-                    label: const Text('Ver Carrito', style: TextStyle(color: AppColors.blanco, fontSize: 16)),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CartScreen()),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            )
-          : ElevatedButton.icon(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Colors.red),
+              ),
+              icon: const Icon(Icons.remove_shopping_cart, color: Colors.red),
+              label: const Text('Remover', style: TextStyle(color: Colors.red, fontSize: 16)),
+              onPressed: () {
+                cartService.removeItemByBarcode(widget.barcode);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${_producto!.nombre} removido del carrito')),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.azulSirena,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              icon: const Icon(Icons.add_shopping_cart, color: AppColors.blanco),
-              label: const Text('Agregar al Carrito', style: TextStyle(color: AppColors.blanco, fontSize: 18)),
-              onPressed: _agregarAlCarrito,
+              icon: const Icon(Icons.shopping_cart_checkout, color: AppColors.blanco),
+              label: const Text('Ver Carrito', style: TextStyle(color: AppColors.blanco, fontSize: 16)),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CartScreen()),
+                );
+              },
             ),
+          ),
+        ],
+      )
+          : ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.azulSirena,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        icon: const Icon(Icons.add_shopping_cart, color: AppColors.blanco),
+        label: const Text('Agregar al Carrito', style: TextStyle(color: AppColors.blanco, fontSize: 18)),
+        onPressed: _agregarAlCarrito,
+      ),
     );
   }
 
@@ -140,19 +171,15 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
     final cartService = CartService();
 
     if (_producto!.tipoVenta == 'peso_variable') {
-      // Mostrar el diálogo de peso si el tipo es peso_variable
       final result = await showDialog(
         context: context,
         builder: (context) => VariableWeightDialog(preselectedProduct: _producto!),
       );
 
       if (result != null && result is Map) {
-        // En un caso real, el diálogo de VariableWeightDialog podría usarse para
-        // buscar cualquier producto, pero aquí asumiremos que queremos agregar 
-        // el producto devuelto con el peso especificado.
         final prod = result['producto'] as Producto;
         final libras = result['libras'] as double;
-        
+
         cartService.addItem(producto: prod, cantidad: 1, libras: libras);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +188,6 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
         }
       }
     } else {
-      // Producto empacado normal
       cartService.addItem(producto: _producto!, cantidad: 1);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${_producto!.nombre} agregado al carrito')),
@@ -170,7 +196,6 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
   }
 
   Widget _buildBody() {
-    // 1. Estado de Carga
     if (_isLoading) {
       return Center(
         child: Column(
@@ -184,7 +209,6 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
       );
     }
 
-    // 2. Estado de Error
     if (_errorMessage != null) {
       return Center(
         child: Padding(
@@ -198,26 +222,68 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
       );
     }
 
-    // 3. Caso: Producto No Encontrado
     if (_producto == null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.search_off_rounded, size: 72, color: Colors.orange),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.amarilloSirena.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.production_quantity_limits_rounded,
+                  size: 80,
+                  color: AppColors.azulSirena,
+                ),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                '¡Ups! No lo encontramos',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.negro,
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
-                'No se encontró ningún producto registrado con el código:\n${widget.barcode}',
+                'El producto con el código\n${widget.barcode}\nno está en nuestra base de datos.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Volver e intentar de nuevo'),
+              const SizedBox(height: 48),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.azulSirena,
+                    foregroundColor: AppColors.blanco,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text(
+                    'VOLVER A INTENTAR',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -225,56 +291,167 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
       );
     }
 
-    // 4. Caso Exitoso: Producto Encontrado
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(0),
       child: Column(
         children: [
-          Card(
-            elevation: 2,
-            child: ListTile(
-              leading: const Icon(Icons.inventory_2_outlined, size: 40, color: Colors.deepPurple),
-              title: Text(
-                _producto!.nombre,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text('Código: ${widget.barcode}'),
+          if (_producto!.imagenUrl != null && _producto!.imagenUrl!.isNotEmpty)
+            Image.network(
+              _producto!.imagenUrl!,
+              height: 250,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.photo, size: 200, color: Colors.grey),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Icon(CupertinoIcons.photo, size: 200, color: Colors.grey),
             ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Información General',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  _producto!.nombre.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.azulSirena,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
                   ),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  // Muestra los campos disponibles en tu modelo Producto
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _producto!.tipoVenta == 'peso_variable'
+                      ? 'RD\$ ${_producto!.precioPorLibra?.toStringAsFixed(2) ?? "0.00"} /lb'
+                      : 'RD\$ ${_producto!.precio?.toStringAsFixed(2) ?? "0.00"}',
+                  style: const TextStyle(
+                    color: AppColors.azulSirena,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // DISPONIBILIDAD EN SUCURSALES
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.blanco,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.amarilloSirena, width: 4),
+                  ),
+                  child: Column(
                     children: [
-                      const Text('Código / PLU:', style: TextStyle(color: Colors.grey)),
-                      Text(widget.barcode, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.amarilloSirena,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                        ),
+                        child: Text(
+                          'DISPONIBILIDAD EN SUCURSALES (${_producto!.sucursales.length})',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.azulSirena,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 120,
+                        padding: const EdgeInsets.all(8.0),
+                        child: _producto!.sucursales.isEmpty
+                            ? const Center(child: Text('Sin datos de sucursales'))
+                            : ListView.builder(
+                          itemCount: _producto!.sucursales.length,
+                          itemBuilder: (context, index) {
+                            final nombre = _nombreSucursal(_producto!.sucursales[index]);
+                            return Text('• $nombre', style: const TextStyle(color: AppColors.azulSirena));
+                          },
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Nombre:', style: TextStyle(color: Colors.grey)),
-                      Text(_producto!.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+
+          const SizedBox(height: 24),
+
+          if (_producto!.productosSimilares.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              color: AppColors.amarilloSirena,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: const Text(
+                'PRODUCTOS SIMILARES / RELACIONADOS',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.azulSirena,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 180,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _producto!.productosSimilares.length,
+                itemBuilder: (context, index) {
+                  final sim = _producto!.productosSimilares[index];
+                  if (sim is! Map) return const SizedBox.shrink();
+
+                  final nom = sim['nombre'] ?? '';
+                  final prec = sim['precio']?.toString() ?? '0.00';
+                  final img = sim['imagen_url'];
+
+                  return Container(
+                    width: 140,
+                    margin: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (img != null && img.toString().isNotEmpty)
+                          Image.network(img, height: 80, fit: BoxFit.contain, errorBuilder: (_,__,___)=>const Icon(CupertinoIcons.photo, size: 80, color: Colors.grey))
+                        else
+                          const Icon(CupertinoIcons.photo, size: 80, color: Colors.grey),
+                        const SizedBox(height: 8),
+                        Text(
+                          nom.toString().toUpperCase(),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.azulSirena,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'RD\$ $prec',
+                          style: const TextStyle(
+                            color: AppColors.azulSirena,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
         ],
       ),
     );

@@ -1,15 +1,44 @@
 import 'package:flutter/material.dart';
+import '../utils/app_colors.dart';
+import '../widgets/menu_entrada_popup.dart';
+import 'home_screen.dart';
 
 class SirenaMapScreen extends StatelessWidget {
   final List<String> nodosDestino;
 
   const SirenaMapScreen({super.key, required this.nodosDestino});
 
+  void _abrirMenuEntrada(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      builder: (context) => const MenuEntradaPopup(),
+    );
+  }
+
+  void _irAHome(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mapa y Rutas (SirenaMap)'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu, color: AppColors.azulSirena),
+            onPressed: () => _abrirMenuEntrada(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.azulSirena),
+            onPressed: () => _irAHome(context),
+          ),
+        ],
       ),
       body: Center(
         child: Padding(
