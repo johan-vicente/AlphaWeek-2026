@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: com.getkeepsafe.relinker:relinker:1.4.5@aar" external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/9.1.0/transforms/d21fc39a9ad7405983020c444a5ca3ad/workspace/transformed/relinker-1.4.5/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/9.1.0/transforms/d21fc39a9ad7405983020c444a5ca3ad/workspace/transformed/relinker-1.4.5/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
