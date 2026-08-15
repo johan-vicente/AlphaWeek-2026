@@ -8,8 +8,8 @@ class FirebaseService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
 
   Future<bool> _hayConexion() async {
-    final resultado = await Connectivity().checkConnectivity();
-    return resultado != ConnectivityResult.none;
+    final resultados = await Connectivity().checkConnectivity();
+    return !resultados.contains(ConnectivityResult.none);
   }
 
   // Busca un producto exacto por su código de barras/PLU
