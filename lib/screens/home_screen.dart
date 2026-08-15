@@ -3,6 +3,7 @@ import '../models/producto.dart';
 import '../services/firebase_service.dart';
 import '../widgets/header_sirena.dart';
 import '../widgets/producto_card.dart';
+import '../widgets/menu_entrada_popup.dart';
 import '../utils/app_colors.dart';
 import 'product_result_screen.dart';
 import 'bar_scanner_screen.dart';
@@ -34,6 +35,15 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _abrirMenuEntrada() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      builder: (context) => const MenuEntradaPopup(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             HeaderSirena(
+              onMenuTap: _abrirMenuEntrada,
               onBarcodeTap: () async {
                 final codigoEscaneado = await Navigator.push<String>(
                   context,

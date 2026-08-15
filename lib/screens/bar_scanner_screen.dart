@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../utils/app_colors.dart';
+import '../widgets/menu_entrada_popup.dart';
 import 'variable_weight_dialog.dart';
+import 'home_screen.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -47,6 +49,26 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     }
   }
 
+  void _abrirMenuEntrada() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      builder: (context) => const MenuEntradaPopup(),
+    );
+  }
+
+  Future<void> _irAHome() async {
+    if (_isCameraActive) {
+      await _scannerController.stop();
+    }
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+    );
+  }
+
   void _showManualInputDialog() {
     final TextEditingController manualCodeController = TextEditingController();
 
@@ -64,7 +86,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             controller: manualCodeController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: 'Ingresa el código EAN-13 o UPC',
+              hintText: 'Ingresa el código de barra',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: AppColors.amarilloSirena),
@@ -134,6 +156,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: AppColors.azulSirena),
+          onPressed: _abrirMenuEntrada,
+        ),
         title: const Text(
           'ESCANER SIRENA',
           style: TextStyle(
@@ -143,6 +169,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.azulSirena),
+            onPressed: _irAHome,
+          ),
           IconButton(
             icon: const Icon(Icons.close, color: AppColors.azulSirena),
             onPressed: () => Navigator.pop(context),
@@ -155,15 +185,12 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icono Central
               const Icon(
                 CupertinoIcons.barcode,
                 size: 140,
                 color: AppColors.azulSirena,
               ),
               const SizedBox(height: 32),
-              
-              // Textos
               const Text(
                 'Escaner de Productos',
                 style: TextStyle(
@@ -183,8 +210,6 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-
-              // Botón Principal
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -213,8 +238,6 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-
-              // Opciones Secundarias (Issues 6 & 7)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -316,6 +339,14 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           },
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.menu, color: AppColors.azulSirena),
+            onPressed: _abrirMenuEntrada,
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.azulSirena),
+            onPressed: _irAHome,
+          ),
           IconButton(
             icon: ValueListenableBuilder(
               valueListenable: _scannerController,

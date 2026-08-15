@@ -8,6 +8,7 @@ class HeaderSirena extends StatelessWidget {
   final VoidCallback? onCartTap;
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onSirenaMasTap;
+  final VoidCallback? onLogoTap;
 
   const HeaderSirena({
     super.key,
@@ -16,6 +17,7 @@ class HeaderSirena extends StatelessWidget {
     this.onCartTap,
     this.onSearchChanged,
     this.onSirenaMasTap,
+    this.onLogoTap,
   });
 
   @override
@@ -55,7 +57,10 @@ class HeaderSirena extends StatelessWidget {
           child: Row(
             children: [
               IconButton(icon: const Icon(Icons.menu, color: AppColors.azulSirena), onPressed: onMenuTap),
-              SvgPicture.asset('assets/branding/logo_sirena.svg', height: 26),
+              GestureDetector(
+                onTap: onLogoTap,
+                child: SvgPicture.asset('assets/branding/logo_sirena.svg', height: 26),
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Container(
@@ -69,12 +74,12 @@ class HeaderSirena extends StatelessWidget {
                       Expanded(
                         child: TextField(
                           onChanged: onSearchChanged,
-                          textAlign: TextAlign.center,
                           decoration: const InputDecoration(
                             hintText: 'Buscar en Sirena',
                             hintStyle: TextStyle(color: Colors.grey),
                             border: InputBorder.none,
                             isCollapsed: true,
+                            contentPadding: EdgeInsets.only(left: 12),
                           ),
                         ),
                       ),

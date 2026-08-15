@@ -1,10 +1,28 @@
 import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
 import '../utils/app_colors.dart';
+import '../widgets/menu_entrada_popup.dart';
 import 'sirena_map_screen.dart';
+import 'home_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
+
+  void _abrirMenuEntrada(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      builder: (context) => const MenuEntradaPopup(),
+    );
+  }
+
+  void _irAHome(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +36,16 @@ class CartScreen extends StatelessWidget {
         ),
         backgroundColor: AppColors.amarilloSirena,
         iconTheme: const IconThemeData(color: AppColors.negro),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu, color: AppColors.azulSirena),
+            onPressed: () => _abrirMenuEntrada(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.azulSirena),
+            onPressed: () => _irAHome(context),
+          ),
+        ],
       ),
       body: AnimatedBuilder(
         animation: cartService,
@@ -52,7 +80,8 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildCartItem(BuildContext context, CartItem item, CartService cartService) {
     final esVariable = item.producto.tipoVenta == 'peso_variable';
-    
+    final imagenUrl = item.producto.imagenUrl;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
@@ -61,7 +90,6 @@ class CartScreen extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icono o Imagen genérica
             Container(
               width: 50,
               height: 50,
@@ -69,10 +97,27 @@ class CartScreen extends StatelessWidget {
                 color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.shopping_bag, color: AppColors.azulSirena),
+              clipBehavior: Clip.antiAlias,
+              child: (imagenUrl != null && imagenUrl.isNotEmpty)
+                  ? Image.network(
+                imagenUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.shopping_bag, color: AppColors.azulSirena),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return const Center(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.azulSirena),
+                    ),
+                  );
+                },
+              )
+                  : const Icon(Icons.shopping_bag, color: AppColors.azulSirena),
             ),
             const SizedBox(width: 12),
-            // Detalles del producto
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +141,6 @@ class CartScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Controles de cantidad y botón eliminar
             Column(
               children: [
                 Row(
@@ -191,12 +235,11 @@ class CartScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.azulSirena),
             ),
             onPressed: () {
-              // Recopilar nodos asociados a los productos
               final List<String> nodosRuta = cartService.items
                   .map((item) => item.nodoId)
                   .whereType<String>()
                   .toSet()
-                  .toList(); // toSet para evitar duplicados
+                  .toList();
 
               Navigator.push(
                 context,
