@@ -202,22 +202,65 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
     if (_producto == null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.search_off_rounded, size: 72, color: Colors.orange),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.amarilloSirena.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.production_quantity_limits_rounded,
+                  size: 80,
+                  color: AppColors.azulSirena,
+                ),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                '¡Ups! No lo encontramos',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.negro,
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
-                'No se encontró ningún producto registrado con el código:\n${widget.barcode}',
+                'El producto con el código\n${widget.barcode}\nno está en nuestra base de datos.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Volver e intentar de nuevo'),
+              const SizedBox(height: 48),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.azulSirena,
+                    foregroundColor: AppColors.blanco,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text(
+                    'VOLVER A INTENTAR',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

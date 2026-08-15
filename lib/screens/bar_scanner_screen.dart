@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../utils/app_colors.dart';
 import 'variable_weight_dialog.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
@@ -10,6 +11,7 @@ class BarcodeScannerScreen extends StatefulWidget {
 }
 
 class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
+  bool _isCameraActive = false;
   final MobileScannerController _scannerController = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     formats: const [
@@ -51,19 +53,32 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Entrada manual'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: AppColors.blanco,
+          title: const Text(
+            'Entrada manual',
+            style: TextStyle(color: AppColors.azulSirena, fontWeight: FontWeight.bold),
+          ),
           content: TextField(
             controller: manualCodeController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Ingresa el código EAN-13 o UPC',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.amarilloSirena),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.cianSirenaMas, width: 2),
+              ),
+              prefixIcon: const Icon(Icons.numbers, color: AppColors.azulSirena),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -72,7 +87,12 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                   Navigator.pop(dialogContext, code);
                 }
               },
-              child: const Text('Aceptar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.azulSirena,
+                foregroundColor: AppColors.blanco,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('ACEPTAR', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -105,11 +125,195 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildIntroView() {
+    return Scaffold(
+      backgroundColor: AppColors.blanco,
+      appBar: AppBar(
+        backgroundColor: AppColors.amarilloSirena,
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'ESCANER SIRENA',
+          style: TextStyle(
+            color: AppColors.azulSirena,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close, color: AppColors.azulSirena),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icono Central
+              const Icon(
+                Icons.barcode_reader,
+                size: 140,
+                color: AppColors.azulSirena,
+              ),
+              const SizedBox(height: 32),
+              
+              // Textos
+              const Text(
+                'Escaner de Productos',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.negro,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '"Tu compra más rápida: descubre precios y la\nzona exactas de tus productos favoritos."',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 48),
+
+              // Botón Principal
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _isCameraActive = true;
+                    });
+                    await _scannerController.start();
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.cianSirenaMas, width: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'ESCANEA AHORA',
+                    style: TextStyle(
+                      color: AppColors.cianSirenaMas,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Opciones Secundarias (Issues 6 & 7)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: _showManualInputDialog,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.blanco,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.amarilloSirena, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.amarilloSirena.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: const Column(
+                          children: [
+                            Icon(Icons.keyboard_alt_outlined, color: AppColors.azulSirena, size: 28),
+                            SizedBox(height: 8),
+                            Text(
+                              'Manual',
+                              style: TextStyle(
+                                color: AppColors.azulSirena,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      onTap: _showVariableWeightModal,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.blanco,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.amarilloSirena, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.amarilloSirena.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: const Column(
+                          children: [
+                            Icon(Icons.scale_outlined, color: AppColors.azulSirena, size: 28),
+                            SizedBox(height: 8),
+                            Text(
+                              'Por Peso',
+                              style: TextStyle(
+                                color: AppColors.azulSirena,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCameraView() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Escanear Producto'),
+        backgroundColor: AppColors.amarilloSirena,
+        title: const Text(
+          'Escanear Producto',
+          style: TextStyle(color: AppColors.azulSirena, fontWeight: FontWeight.bold),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.azulSirena),
+          onPressed: () async {
+            await _scannerController.stop();
+            setState(() {
+              _isCameraActive = false;
+            });
+          },
+        ),
         actions: [
           IconButton(
             icon: ValueListenableBuilder(
@@ -118,7 +322,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                 final isTorchOn = state.torchState == TorchState.on;
                 return Icon(
                   isTorchOn ? Icons.flash_on : Icons.flash_off,
-                  color: isTorchOn ? Colors.yellow : Colors.grey,
+                  color: isTorchOn ? AppColors.azulSirena : Colors.grey,
                 );
               },
             ),
@@ -162,58 +366,32 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             child: const SizedBox.expand(),
           ),
           Positioned(
-            bottom: 30,
+            bottom: 40,
             left: 20,
             right: 20,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Apunta la cámara al código de barras',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
-                  ),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black87,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: _showManualInputDialog,
-                        icon: const Icon(Icons.keyboard, size: 18),
-                        label: const Text('Manual', style: TextStyle(fontSize: 12)),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.lightGreenAccent.shade700,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: _showVariableWeightModal,
-                        icon: const Icon(Icons.scale, size: 18),
-                        label: const Text('Por Peso (lb)', style: TextStyle(fontSize: 12)),
-                      ),
-                    ),
-                  ],
+                child: const Text(
+                  'Apunta la cámara al código de barras',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  textAlign: TextAlign.center,
                 ),
-              ],
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _isCameraActive ? _buildCameraView() : _buildIntroView();
   }
 
   String _getErrorMessage(MobileScannerErrorCode errorCode) {
@@ -249,7 +427,7 @@ class ScannerOverlayPainter extends CustomPainter {
     canvas.drawPath(backgroundPath, backgroundPaint);
 
     final Paint borderPaint = Paint()
-      ..color = Colors.greenAccent
+      ..color = AppColors.cianSirenaMas
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/producto.dart';
 import '../services/firebase_service.dart';
+import '../utils/app_colors.dart';
 
 class VariableWeightDialog extends StatefulWidget {
   final Producto? preselectedProduct;
@@ -84,7 +85,12 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Producto por Peso (Libras)'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: AppColors.blanco,
+      title: const Text(
+        'Producto por Peso (lb)',
+        style: TextStyle(color: AppColors.azulSirena, fontWeight: FontWeight.bold),
+      ),
       content: SizedBox(
         width: MediaQuery.of(context).size.width * 0.8,
         child: SingleChildScrollView(
@@ -95,10 +101,17 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
               if (widget.preselectedProduct == null) ...[
                 TextField(
                   controller: _searchController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Buscar fruta o vegetal (ej. Manzana)',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
+                    labelStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, color: AppColors.cianSirenaMas),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.cianSirenaMas, width: 2),
+                    ),
                   ),
                   onChanged: _onSearchChanged,
                 ),
@@ -153,14 +166,21 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
                 ),
               if (_selectedProduct != null) ...[
                 Card(
-                  color: Colors.deepPurple.shade50,
+                  color: AppColors.cianSirenaMas.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: AppColors.cianSirenaMas, width: 1),
+                  ),
                   margin: const EdgeInsets.only(top: 8),
                   child: ListTile(
-                    title: Text(_selectedProduct!.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(
+                      _selectedProduct!.nombre, 
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.azulSirena)
+                    ),
                     subtitle: Text('Precio/lb: \$${_getUnitPrice(_selectedProduct!).toStringAsFixed(2)}'),
                     trailing: widget.preselectedProduct == null
                         ? IconButton(
-                            icon: const Icon(Icons.close, color: Colors.red),
+                            icon: const Icon(Icons.close, color: Colors.redAccent),
                             onPressed: () {
                               setState(() {
                                 _selectedProduct = null;
@@ -176,28 +196,34 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
                 TextField(
                   controller: _weightController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Peso en Libras (lb)',
                     suffixText: 'lb',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.cianSirenaMas, width: 2),
+                    ),
                   ),
                   onChanged: (_) => _calculateTotal(),
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green),
+                    color: AppColors.amarilloSirena.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.amarilloSirena, width: 2),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Precio Total:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      const Text('Precio Total:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.negro)),
                       Text(
                         '\$${_totalPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.azulSirena),
                       ),
                     ],
                   ),
@@ -210,7 +236,7 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
         ),
         ElevatedButton(
           onPressed: (_selectedProduct != null && _totalPrice > 0)
@@ -222,7 +248,12 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
             });
           }
               : null,
-          child: const Text('Aceptar'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.azulSirena,
+            foregroundColor: AppColors.blanco,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: const Text('AGREGAR', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );
