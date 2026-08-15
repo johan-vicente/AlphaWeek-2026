@@ -38,3 +38,20 @@ Future<void> cargarGrafoDesdeAssets() async {
     print('Grafo cargado para: $sucursalId');
   }
 }
+
+Future<void> cargarCajasDesdeAssets() async {
+  final db = FirebaseDatabase.instance.ref();
+  final sucursales = ['villa_mella', 'las_americas', 'autopista_san_isidro'];
+
+  for (final sucursalId in sucursales) {
+    final Map<String, dynamic> cajas = {};
+    for (int i = 1; i <= 7; i++) {
+      cajas['caja_$i'] = {
+        'nombre': 'Caja $i',
+        'habilitada': i % 2 != 0, // alterna abierta/cerrada para la demo, ajustable
+      };
+    }
+    await db.child('sucursales/$sucursalId/cajas').set(cajas);
+    print('Cajas cargadas para: $sucursalId');
+  }
+}
