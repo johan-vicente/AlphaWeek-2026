@@ -43,4 +43,40 @@ class RutaService {
     }
     return camino.reversed.toList();
   }
+
+  /// Calcula una ruta que visita todos los [destinos] partiendo de [origen],
+  /// usando la heurística del vecino más cercano (suficiente para 2-4 destinos).
+  List<String> calcularRutaMultiDestino(
+      Map<String, NodoGrafo> nodos,
+      String origen,
+      List<String> destinos,
+      ) {
+    final pendientes = destinos.toSet()..remove(origen);
+    if (pendientes.isEmpty) return [origen];
+
+    final rutaCompleta = <String>[origen];
+    String actual = origen;
+
+    while (pendientes.isNotEmpty) {
+      String? masCercano;
+      List<String> mejorTramo = [];
+
+      for (final destino in pendientes) {
+        final tramo = calcularRuta(nodos, actual, destino);
+        if (tramo.isEmpty) continue; // no hay ruta posible a este destino
+        if (masCercano == null || tramo.length < mejorTramo.length) {
+          masCercano = destino;
+          mejorTramo = tramo;
+        }
+      }
+
+      if (masCercano == null) break; // ningún destino restante es alcanzable
+      rutaCompleta.addAll(mejorTramo.sublist(1)); // sin repetir el nodo actual
+      actual = masCercano;
+      pendientes.remove(masCercano);
+    }
+
+    return rutaCompleta;
+  }
 }
+

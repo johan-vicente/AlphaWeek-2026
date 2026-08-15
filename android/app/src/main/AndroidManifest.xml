@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.CAMERA"/> <!-- Solicitar el permiso de la camara -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" /> <!-- Declara si es necesaria la camara para utilizar la aplicacion-->
     <application
         android:label="sirena_alphaweek"
         android:name="${applicationName}"
