@@ -3,10 +3,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'services/carga_inicial.dart';
 import 'screens/bar_scanner_screen.dart';
 import 'screens/product_result_screen.dart';
+import 'services/local_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await LocalStorageService.init();
   runApp(const MyApp());
 }
 
