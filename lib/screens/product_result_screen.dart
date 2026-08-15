@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-// Ajusta las rutas de importación según la estructura de tus carpetas
 import '../services/firebase_service.dart';
-import '../models/producto.dart'; // Tu modelo de Producto
+import '../models/producto.dart';
+import '../services/cart_service.dart';
+import 'variable_weight_dialog.dart';
+import 'cart_screen.dart';
+import '../utils/app_colors.dart';
 
 class ProductResultScreen extends StatefulWidget {
   final String barcode;
@@ -42,12 +45,128 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalle del Producto'),
-      ),
-      body: _buildBody(),
+    return AnimatedBuilder(
+      animation: CartService(),
+      builder: (context, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Detalle del Producto'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CartScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
+          body: _buildBody(),
+          bottomNavigationBar: _producto != null && !_isLoading ? _buildBottomBar() : null,
+        );
+      },
     );
+  }
+
+  Widget _buildBottomBar() {
+    final cartService = CartService();
+    final isInCart = cartService.isProductInCart(widget.barcode);
+
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: AppColors.blanco,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.sombraSuave,
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: isInCart
+          ? Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Colors.red),
+                    ),
+                    icon: const Icon(Icons.remove_shopping_cart, color: Colors.red),
+                    label: const Text('Remover', style: TextStyle(color: Colors.red, fontSize: 16)),
+                    onPressed: () {
+                      cartService.removeItemByBarcode(widget.barcode);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${_producto!.nombre} removido del carrito')),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.azulSirena,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    icon: const Icon(Icons.shopping_cart_checkout, color: AppColors.blanco),
+                    label: const Text('Ver Carrito', style: TextStyle(color: AppColors.blanco, fontSize: 16)),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CartScreen()),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            )
+          : ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.azulSirena,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              icon: const Icon(Icons.add_shopping_cart, color: AppColors.blanco),
+              label: const Text('Agregar al Carrito', style: TextStyle(color: AppColors.blanco, fontSize: 18)),
+              onPressed: _agregarAlCarrito,
+            ),
+    );
+  }
+
+  void _agregarAlCarrito() async {
+    final cartService = CartService();
+
+    if (_producto!.tipoVenta == 'peso_variable') {
+      // Mostrar el diálogo de peso si el tipo es peso_variable
+      final result = await showDialog(
+        context: context,
+        builder: (context) => VariableWeightDialog(preselectedProduct: _producto!),
+      );
+
+      if (result != null && result is Map) {
+        // En un caso real, el diálogo de VariableWeightDialog podría usarse para
+        // buscar cualquier producto, pero aquí asumiremos que queremos agregar 
+        // el producto devuelto con el peso especificado.
+        final prod = result['producto'] as Producto;
+        final libras = result['libras'] as double;
+        
+        cartService.addItem(producto: prod, cantidad: 1, libras: libras);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${prod.nombre} agregado al carrito')),
+          );
+        }
+      }
+    } else {
+      // Producto empacado normal
+      cartService.addItem(producto: _producto!, cantidad: 1);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${_producto!.nombre} agregado al carrito')),
+      );
+    }
   }
 
   Widget _buildBody() {

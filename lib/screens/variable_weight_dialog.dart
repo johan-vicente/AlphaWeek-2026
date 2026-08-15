@@ -3,7 +3,9 @@ import '../models/producto.dart';
 import '../services/firebase_service.dart';
 
 class VariableWeightDialog extends StatefulWidget {
-  const VariableWeightDialog({super.key});
+  final Producto? preselectedProduct;
+
+  const VariableWeightDialog({super.key, this.preselectedProduct});
 
   @override
   State<VariableWeightDialog> createState() => _VariableWeightDialogState();
@@ -18,6 +20,14 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
   Producto? _selectedProduct;
   bool _isSearching = false;
   double _totalPrice = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.preselectedProduct != null) {
+      _selectedProduct = widget.preselectedProduct;
+    }
+  }
 
   double _getUnitPrice(Producto producto) {
     return producto.precioPorLibra ?? producto.precio ?? 0.0;
@@ -82,15 +92,17 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  labelText: 'Buscar fruta o vegetal (ej. Manzana)',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
+              if (widget.preselectedProduct == null) ...[
+                TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    labelText: 'Buscar fruta o vegetal (ej. Manzana)',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: _onSearchChanged,
                 ),
-                onChanged: _onSearchChanged,
-              ),
+              ],
               const SizedBox(height: 12),
               if (_isSearching)
                 const Padding(
@@ -146,16 +158,18 @@ class _VariableWeightDialogState extends State<VariableWeightDialog> {
                   child: ListTile(
                     title: Text(_selectedProduct!.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text('Precio/lb: \$${_getUnitPrice(_selectedProduct!).toStringAsFixed(2)}'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          _selectedProduct = null;
-                          _searchController.clear();
-                          _totalPrice = 0.0;
-                        });
-                      },
-                    ),
+                    trailing: widget.preselectedProduct == null
+                        ? IconButton(
+                            icon: const Icon(Icons.close, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                _selectedProduct = null;
+                                _searchController.clear();
+                                _totalPrice = 0.0;
+                              });
+                            },
+                          )
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 12),
