@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../utils/app_colors.dart';
 import 'variable_weight_dialog.dart';
@@ -156,7 +157,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             children: [
               // Icono Central
               const Icon(
-                Icons.barcode_reader,
+                CupertinoIcons.barcode,
                 size: 140,
                 color: AppColors.azulSirena,
               ),

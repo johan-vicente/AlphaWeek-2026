@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../services/firebase_service.dart';
 import '../models/producto.dart';
 import '../services/cart_service.dart';
 import 'variable_weight_dialog.dart';
 import 'cart_screen.dart';
 import '../utils/app_colors.dart';
+import '../widgets/header_sirena.dart';
 
 class ProductResultScreen extends StatefulWidget {
   final String barcode;
@@ -49,21 +51,24 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
       animation: CartService(),
       builder: (context, child) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Detalle del Producto'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CartScreen()),
-                  );
-                },
-              ),
-            ],
+          backgroundColor: AppColors.blanco,
+          body: SafeArea(
+            child: Column(
+              children: [
+                HeaderSirena(
+                  onMenuTap: () => Navigator.pop(context),
+                  onBarcodeTap: () => Navigator.pop(context),
+                  onCartTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CartScreen()),
+                    );
+                  },
+                ),
+                Expanded(child: _buildBody()),
+              ],
+            ),
           ),
-          body: _buildBody(),
           bottomNavigationBar: _producto != null && !_isLoading ? _buildBottomBar() : null,
         );
       },
@@ -270,54 +275,176 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
 
     // 4. Caso Exitoso: Producto Encontrado
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(0),
       child: Column(
         children: [
-          Card(
-            elevation: 2,
-            child: ListTile(
-              leading: const Icon(Icons.inventory_2_outlined, size: 40, color: Colors.deepPurple),
-              title: Text(
-                _producto!.nombre,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text('Código: ${widget.barcode}'),
+          // Imagen del producto
+          if (_producto!.imagenUrl != null && _producto!.imagenUrl!.isNotEmpty)
+            Image.network(
+              _producto!.imagenUrl!,
+              height: 250,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.photo, size: 200, color: Colors.grey),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Icon(CupertinoIcons.photo, size: 200, color: Colors.grey),
             ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Información General',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  _producto!.nombre.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.azulSirena,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
                   ),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  // Muestra los campos disponibles en tu modelo Producto
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'RD\$ ${_producto!.precio?.toStringAsFixed(2) ?? "0.00"}',
+                  style: const TextStyle(
+                    color: AppColors.azulSirena,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'CÓDIGO DE BARRA: ${widget.barcode}',
+                  style: const TextStyle(
+                    color: AppColors.azulSirena,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // DISPONIBILIDAD EN SUCURSALES
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.blanco,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.amarilloSirena, width: 4),
+                  ),
+                  child: Column(
                     children: [
-                      const Text('Código / PLU:', style: TextStyle(color: Colors.grey)),
-                      Text(widget.barcode, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.amarilloSirena,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                        ),
+                        child: Text(
+                          'DISPONIBILIDAD EN SUCURSALES (${_producto!.sucursales.length})',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.azulSirena,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 120, // fixed height for white area as shown
+                        padding: const EdgeInsets.all(8.0),
+                        child: _producto!.sucursales.isEmpty 
+                            ? const Center(child: Text('Sin datos de sucursales'))
+                            : ListView.builder(
+                                itemCount: _producto!.sucursales.length,
+                                itemBuilder: (context, index) {
+                                  final sucursal = _producto!.sucursales[index];
+                                  final nombre = sucursal is Map ? sucursal['nombre'] : sucursal.toString();
+                                  return Text('• $nombre', style: const TextStyle(color: AppColors.azulSirena));
+                                },
+                              ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Nombre:', style: TextStyle(color: Colors.grey)),
-                      Text(_producto!.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+          
+          const SizedBox(height: 24),
+          
+          // PRODUCTOS SIMILARES
+          if (_producto!.productosSimilares.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              color: AppColors.amarilloSirena,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: const Text(
+                'PRODUCTOS SIMILARES / RELACIONADOS',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.azulSirena,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 180,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _producto!.productosSimilares.length,
+                itemBuilder: (context, index) {
+                  final sim = _producto!.productosSimilares[index];
+                  if (sim is! Map) return const SizedBox.shrink();
+                  
+                  final nom = sim['nombre'] ?? '';
+                  final prec = sim['precio']?.toString() ?? '0.00';
+                  final img = sim['imagen_url'];
+                  
+                  return Container(
+                    width: 140,
+                    margin: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (img != null && img.toString().isNotEmpty)
+                          Image.network(img, height: 80, fit: BoxFit.contain, errorBuilder: (_,__,___)=>const Icon(CupertinoIcons.photo, size: 80, color: Colors.grey))
+                        else
+                          const Icon(CupertinoIcons.photo, size: 80, color: Colors.grey),
+                        const SizedBox(height: 8),
+                        Text(
+                          nom.toString().toUpperCase(),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.azulSirena,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'RD\$ $prec',
+                          style: const TextStyle(
+                            color: AppColors.azulSirena,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
         ],
       ),
     );
