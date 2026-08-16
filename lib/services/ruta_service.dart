@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math' as math;
 import '../models/nodo_grafo.dart';
 
 class RutaService {
@@ -44,8 +45,31 @@ class RutaService {
     return camino.reversed.toList();
   }
 
+  /// Distancia real (euclidiana, sumando cada tramo del camino) usando las
+  /// coordenadas x/y de los nodos. Se usa para desempatar cuando dos
+  /// destinos quedan a la misma cantidad de pasos (hops) del grafo — algo
+  /// muy común en este grafo porque casi todo pasa por el mismo corredor
+  /// central, así que "cantidad de pasos" sola no distingue bien cuál está
+  /// geográficamente más cerca.
+  double _distanciaReal(Map<String, NodoGrafo> nodos, List<String> camino) {
+    double total = 0;
+    for (int i = 1; i < camino.length; i++) {
+      final a = nodos[camino[i - 1]];
+      final b = nodos[camino[i]];
+      if (a == null || b == null) continue;
+      final dx = a.x - b.x;
+      final dy = a.y - b.y;
+      total += math.sqrt(dx * dx + dy * dy);
+    }
+    return total;
+  }
+
   /// Calcula una ruta que visita todos los [destinos] partiendo de [origen],
   /// usando la heurística del vecino más cercano (suficiente para 2-4 destinos).
+  /// El "más cercano" se decide por distancia REAL en el mapa, no solo por
+  /// cantidad de pasos del grafo — así el orden de visita no depende de en
+  /// qué orden vinieron los destinos (ej. orden del carrito), sino de cuál
+  /// está geográficamente más cerca de verdad.
   List<String> calcularRutaMultiDestino(
       Map<String, NodoGrafo> nodos,
       String origen,
@@ -60,13 +84,17 @@ class RutaService {
     while (pendientes.isNotEmpty) {
       String? masCercano;
       List<String> mejorTramo = [];
+      double mejorDistancia = double.infinity;
 
       for (final destino in pendientes) {
         final tramo = calcularRuta(nodos, actual, destino);
         if (tramo.isEmpty) continue; // no hay ruta posible a este destino
-        if (masCercano == null || tramo.length < mejorTramo.length) {
+
+        final distancia = _distanciaReal(nodos, tramo);
+        if (masCercano == null || distancia < mejorDistancia) {
           masCercano = destino;
           mejorTramo = tramo;
+          mejorDistancia = distancia;
         }
       }
 
@@ -79,4 +107,3 @@ class RutaService {
     return rutaCompleta;
   }
 }
-

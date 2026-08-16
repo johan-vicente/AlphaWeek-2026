@@ -235,16 +235,13 @@ class CartScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.azulSirena),
             ),
             onPressed: () {
-              final List<String> nodosRuta = cartService.items
-                  .map((item) => item.nodoId)
-                  .whereType<String>()
-                  .toSet()
-                  .toList();
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => SirenaMapScreen(nodosDestino: nodosRuta),
+                  builder: (context) => const SirenaMapScreen(
+                    sucursalId: 'autopista_san_isidro',
+                    preguntarPorCarritoAlEntrar: true,
+                  ),
                 ),
               );
             },
