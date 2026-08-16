@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/sucursal.dart';
 import '../utils/app_colors.dart';
+import '../screens/sirena_map_screen.dart';
 
 enum TipoEntrada { delivery, pickup, sirenaMap }
 
@@ -270,7 +271,12 @@ class _MenuEntradaPopupState extends State<MenuEntradaPopup> {
           onPressed: habilitado
               ? () {
             Navigator.of(context).pop();
-            // TODO Ticket 16: Navigator.push a SirenaMapScreen(sucursalId: _sucursalSeleccionadaId!)
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SirenaMapScreen(sucursalId: _sucursalSeleccionadaId!),
+              ),
+            );
           }
               : null,
           style: ElevatedButton.styleFrom(
