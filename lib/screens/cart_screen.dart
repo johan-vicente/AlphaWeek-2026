@@ -4,6 +4,7 @@ import '../utils/app_colors.dart';
 import '../widgets/menu_entrada_popup.dart';
 import 'sirena_map_screen.dart';
 import 'home_screen.dart';
+import '../widgets/seleccionar_sucursal_popup.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -235,14 +236,11 @@ class CartScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.azulSirena),
             ),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SirenaMapScreen(
-                    sucursalId: 'autopista_san_isidro',
-                    preguntarPorCarritoAlEntrar: true,
-                  ),
-                ),
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierColor: Colors.black54,
+                builder: (context) => const SeleccionarSucursalPopup(),
               );
             },
           ),

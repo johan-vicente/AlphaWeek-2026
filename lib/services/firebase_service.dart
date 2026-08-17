@@ -7,6 +7,23 @@ import 'local_storage_service.dart';
 class FirebaseService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
 
+  // ---------------------------------------------------------------------
+  // Caché en memoria de TODOS los productos. Antes, cada búsqueda (cada
+  // letra escrita, en el Home, en el diálogo de peso, donde sea) volvía a
+  // traer los 55 productos de Firebase Y a reescribirlos uno por uno en
+  // Hive — de ahí la lentitud. Ahora se trae una sola vez y se reutiliza
+  // desde memoria hasta que expire (o hasta que se llame precargarProductos
+  // otra vez). No cambia el respaldo offline: si no hay conexión, sigue
+  // cayendo en Hive exactamente igual que antes.
+  static List<Producto>? _cacheProductos;
+  static DateTime? _cacheTimestamp;
+  static const Duration _duracionCache = Duration(minutes: 10);
+
+  bool get _cacheValida =>
+      _cacheProductos != null &&
+          _cacheTimestamp != null &&
+          DateTime.now().difference(_cacheTimestamp!) < _duracionCache;
+
   Future<bool> _hayConexion() async {
     final resultados = await Connectivity().checkConnectivity();
     return !resultados.contains(ConnectivityResult.none);
@@ -33,9 +50,68 @@ class FirebaseService {
     return [limpio, 'A$limpio'];
   }
 
+  /// Llama esto UNA vez al arrancar la app (main.dart, después de
+  /// inicializar Firebase) para que la caché ya esté lista antes de que
+  /// el usuario escriba su primera búsqueda. No es obligatorio — si no se
+  /// llama, la caché se llena sola en la primera búsqueda igual — pero
+  /// llamarlo al inicio evita que esa primera búsqueda se sienta lenta.
+  Future<void> precargarProductos() async {
+    await _obtenerTodosLosProductos();
+  }
+
+  /// Trae todos los productos, usando la caché en memoria cuando está
+  /// vigente. Si no hay caché válida: intenta Firebase (y de paso
+  /// actualiza Hive), y si eso falla o no hay conexión, cae a Hive.
+  Future<List<Producto>> _obtenerTodosLosProductos() async {
+    if (_cacheValida) return _cacheProductos!;
+
+    if (await _hayConexion()) {
+      try {
+        final snapshot = await _db.child('productos').get().timeout(const Duration(seconds: 2));
+        if (snapshot.exists) {
+          final data = snapshot.value as Map<dynamic, dynamic>;
+          final productos = <Producto>[];
+          for (var entry in data.entries) {
+            final codigo = entry.key;
+            final valor = entry.value as Map<dynamic, dynamic>;
+            await LocalStorageService.guardarProducto(codigo, valor);
+            productos.add(Producto.fromMap(codigo, valor));
+          }
+          _cacheProductos = productos;
+          _cacheTimestamp = DateTime.now();
+          return productos;
+        }
+      } catch (e) {
+        print('Error obteniendo productos de Firebase: $e');
+      }
+    }
+
+    // Sin conexión o falló: usar lo que haya en Hive, y guardarlo también
+    // como caché en memoria para no repetir la lectura de Hive en cada
+    // búsqueda mientras se siga sin conexión.
+    final cachedData = LocalStorageService.obtenerTodosLosProductos();
+    final productos = cachedData.map((data) {
+      final codigo = data['codigo_barra'] ?? '';
+      return Producto.fromMap(codigo, data);
+    }).toList();
+    if (productos.isNotEmpty) {
+      _cacheProductos = productos;
+      _cacheTimestamp = DateTime.now();
+    }
+    return productos;
+  }
+
   // Busca un producto exacto por su código de barras/PLU
   Future<Producto?> obtenerProductoPorCodigo(String codigo) async {
     final variantes = _variantesCodigo(codigo);
+
+    // Primero revisa la caché en memoria, si ya está cargada
+    if (_cacheValida) {
+      for (final variante in variantes) {
+        final coincidencias = _cacheProductos!.where((p) => p.codigoBarra == variante);
+        if (coincidencias.isNotEmpty) return coincidencias.first;
+      }
+    }
 
     if (await _hayConexion()) {
       for (final variante in variantes) {
@@ -64,40 +140,11 @@ class FirebaseService {
 
   // Busca productos por nombre (para los de peso variable, sin código escaneable)
   Future<List<Producto>> buscarProductosPorNombre(String query) async {
-    final resultados = <Producto>[];
     final queryNormalizada = _normalizar(query);
-
-    if (await _hayConexion()) {
-      try {
-        final snapshot = await _db.child('productos').get().timeout(const Duration(seconds: 2));
-        if (snapshot.exists) {
-          final data = snapshot.value as Map<dynamic, dynamic>;
-          for (var entry in data.entries) {
-            final codigo = entry.key;
-            final valor = entry.value as Map<dynamic, dynamic>;
-            await LocalStorageService.guardarProducto(codigo, valor);
-            final producto = Producto.fromMap(codigo, valor);
-            if (_normalizar(producto.nombre).contains(queryNormalizada)) {
-              resultados.add(producto);
-            }
-          }
-          return resultados;
-        }
-      } catch (e) {
-        print('Error buscando productos en Firebase: $e');
-      }
-    }
-
-    // Sin conexión o falló: buscar entre todos los productos cacheados
-    final cachedProducts = LocalStorageService.obtenerTodosLosProductos();
-    for (var data in cachedProducts) {
-      final codigo = data['codigo_barra'] ?? '';
-      final producto = Producto.fromMap(codigo, data);
-      if (_normalizar(producto.nombre).contains(queryNormalizada)) {
-        resultados.add(producto);
-      }
-    }
-    return resultados;
+    final todos = await _obtenerTodosLosProductos();
+    return todos
+        .where((producto) => _normalizar(producto.nombre).contains(queryNormalizada))
+        .toList();
   }
 
   // Escucha en tiempo real el estado de las cajas de una sucursal
