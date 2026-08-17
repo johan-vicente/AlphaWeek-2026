@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../models/producto.dart';
 import '../utils/app_colors.dart';
 import '../widgets/menu_entrada_popup.dart';
 import 'variable_weight_dialog.dart';
@@ -134,11 +135,15 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     );
 
     if (result != null && mounted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          Navigator.pop(context, result);
-        }
-      });
+      final Producto producto = result['producto'] as Producto;
+      // El diálogo ya se cerró solo (su botón "AGREGAR" hace su propio
+      // Navigator.pop). Aquí solo cerramos el escáner UNA vez, devolviendo
+      // el código de barra — mismo contrato que un escaneo normal, sigue
+      // el mismo camino hacia ProductResultScreen. Antes esto hacía un
+      // SEGUNDO pop con el Map completo, lo que en realidad cerraba esta
+      // pantalla del escáner devolviendo un tipo equivocado (Map en vez
+      // de String), dejando el flujo roto para todo lo que viniera después.
+      Navigator.pop(context, producto.codigoBarra);
     }
   }
 
