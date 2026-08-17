@@ -10,6 +10,10 @@ class HeaderSirena extends StatelessWidget {
   final VoidCallback? onSirenaMasTap;
   final VoidCallback? onLogoTap;
 
+  /// Si es false, no dibuja la franja amarilla inferior de "SirenaMás".
+  /// Por defecto true (comportamiento igual que antes en el resto de la app).
+  final bool mostrarSirenaMas;
+
   const HeaderSirena({
     super.key,
     this.onMenuTap,
@@ -18,6 +22,7 @@ class HeaderSirena extends StatelessWidget {
     this.onSearchChanged,
     this.onSirenaMasTap,
     this.onLogoTap,
+    this.mostrarSirenaMas = true,
   });
 
   @override
@@ -107,33 +112,34 @@ class HeaderSirena extends StatelessWidget {
             ],
           ),
         ),
-        // Franja amarilla inferior — logo + SirenaMás
-        InkWell(
-          onTap: onSirenaMasTap,
-          child: Container(
-            width: double.infinity,
-            color: AppColors.amarilloSirena,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset('assets/branding/logo_sirena.svg', height: 20),
-                const SizedBox(width: 6),
-                const Text(
-                  'SirenaMás',
-                  style: TextStyle(
-                    color: AppColors.cianSirenaMas,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                    fontSize: 16,
+        // Franja amarilla inferior — logo + SirenaMás (opcional)
+        if (mostrarSirenaMas)
+          InkWell(
+            onTap: onSirenaMasTap,
+            child: Container(
+              width: double.infinity,
+              color: AppColors.amarilloSirena,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset('assets/branding/logo_sirena.svg', height: 20),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'SirenaMás',
+                    style: TextStyle(
+                      color: AppColors.cianSirenaMas,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, color: AppColors.cianSirenaMas, size: 20),
-              ],
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right, color: AppColors.cianSirenaMas, size: 20),
+                ],
+              ),
             ),
           ),
-        ),
       ],
     );
   }

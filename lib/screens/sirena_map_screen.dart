@@ -21,6 +21,23 @@ const Map<String, String> _nombreCortoSucursal = {
 
 const double _aspectRatioMapa = 1454 / 1710;
 
+// ---------------------------------------------------------------------
+// CARRILES DE CRUCE de la ruta (San Isidro) — ajústalos tú mismo aquí si
+// hace falta más calibración. Son fracciones 0.0-1.0 de la altura de la
+// imagen. Deben caer en el espacio ABIERTO (amarillo) entre las filas de
+// pasillos, nunca encima de una barra blanca:
+//   - _carrilArriba: espacio abierto entre las cajas y los pasillos 1-6
+//   - _carrilCentro: espacio abierto entre la fila de pasillos 1-6 y la
+//     fila de pasillos 7-15 (solo se usa cuando hay que cruzar de una
+//     mitad de la tienda a la otra)
+//   - _carrilAbajo: espacio abierto entre los pasillos 7-15 y la franja
+//     de Carnes/Jugos/Embutidos
+// Subir un valor = número más chico. Bajar = número más grande.
+const double _carrilArriba = 0.21;
+const double _carrilCentro = 0.55;
+const double _carrilAbajo = 0.89;
+// ---------------------------------------------------------------------
+
 class SirenaMapScreen extends StatefulWidget {
   final String sucursalId;
   final bool preguntarPorCarritoAlEntrar;
@@ -149,13 +166,14 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
   void _calcularRutaConCarrito() {
     final items = CartService().items;
     if (items.isEmpty) {
-      _mostrarMensaje('Llena tu carrito para guiarte');
+      _mostrarDialogoCarritoVacio();
       return;
     }
     if (_nodos.isEmpty) {
       _mostrarMensaje('El mapa todavía está cargando, intenta de nuevo en un momento');
       return;
     }
+
 
     final destinos = <String>{};
     for (final item in items) {
@@ -183,6 +201,29 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
       _mostrarBuscador = false;
     });
   }
+  void _mostrarDialogoCarritoVacio() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tu carrito está vacío'),
+        content: const Text('Llena tu carrito para que podamos guiarte hasta tus productos.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // cierra el diálogo
+              _irAHome(); // ya existe, navega al Home (donde se llena el carrito)
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.azulSirena),
+            child: const Text('Llenar carrito', style: TextStyle(color: AppColors.blanco)),
+          ),
+        ],
+      ),
+    );
+  }
 
   List<String> _ordenarDestinosSegunRuta(List<String> ruta, Set<String> destinos) {
     final orden = <String>[];
@@ -194,10 +235,6 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
     return orden;
   }
 
-  /// Toque sobre un nodo del mapa: si se está esperando el origen, lo fija.
-  /// Si ya hay origen (buscando destino, o incluso con una ruta ya
-  /// calculada), tocar directamente un pasillo/zona calcula la ruta hacia
-  /// ahí al toque — alternativa al buscador para quien ya conoce el mapa.
   void _onTapNodo(String nodoId) {
     if (_esperandoOrigenManual) {
       setState(() {
@@ -308,6 +345,7 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
               onBarcodeTap: _irAEscaner,
               onCartTap: _irAlCarrito,
               onSearchChanged: (_) {},
+              mostrarSirenaMas: false,
             ),
             Container(
               width: double.infinity,
@@ -429,7 +467,15 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
     );
   }
 
+  List<NodoGrafo> _puntosParaDibujarRuta() {
+    if (_origenId == null || _destinosEnOrden.isEmpty) return [];
+    final ids = [_origenId!, ..._destinosEnOrden];
+    return ids.map((id) => _nodos[id]).whereType<NodoGrafo>().toList();
+  }
+
   Widget _construirMapa() {
+    final puntosRuta = _puntosParaDibujarRuta();
+
     return Stack(
       children: [
         Positioned.fill(
@@ -443,13 +489,10 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
                     Positioned.fill(
                       child: Image.asset('assets/mapas/${widget.sucursalId}.png', fit: BoxFit.contain),
                     ),
-                    if (_rutaActual.length > 1)
+                    if (puntosRuta.length > 1)
                       Positioned.fill(
                         child: CustomPaint(
-                          painter: _RutaPainter(
-                            puntos: _rutaActual.map((id) => _nodos[id]).whereType<NodoGrafo>().toList(),
-                            color: AppColors.azulSirena,
-                          ),
+                          painter: _RutaPainter(puntos: puntosRuta, color: AppColors.azulSirena),
                         ),
                       ),
                     ..._construirEtiquetasPasillo(),
@@ -517,7 +560,10 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
       if (nodo.tipo == 'caja') continue;
 
       final esOrigen = nodo.id == _origenId;
-      final tamano = nodo.tipo == 'pasillo' ? 26.0 : 32.0;
+      // Entrada/Salida se quedan un poco más grandes (son el punto de
+      // referencia principal); pasillos Y zonas usan el mismo tamaño chico.
+      final esEntradaOSalida = nodo.tipo == 'entrada' || nodo.tipo == 'salida';
+      final tamano = esEntradaOSalida ? 32.0 : 26.0;
 
       widgets.add(
         Positioned.fill(
@@ -548,9 +594,6 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
     return widgets;
   }
 
-  /// Marcadores numerados de las paradas del recorrido: círculo azul sólido
-  /// con el número en blanco para cada parada del CUERPO de la ruta, y un
-  /// pin (sin número, es la última) para el destino final.
   List<Widget> _construirMarcadoresDestino() {
     final widgets = <Widget>[];
 
@@ -703,55 +746,51 @@ class _RutaPainter extends CustomPainter {
 
   _RutaPainter({required this.puntos, required this.color});
 
-  bool _esCorredor(NodoGrafo n) => n.tipo == 'interseccion';
+  // Entrada, Hortalizas, Panadería y Lácteos están casi en la misma
+  // columna derecha (x muy parecida) — sin este ajuste, la línea que pasa
+  // por ahí queda tapando esos íconos. Cualquier tramo que viaje por esa
+  // columna se corre un poco a la izquierda. Ajusta tú mismo si hace falta:
+  //   - _limiteColumnaDerecha: a partir de qué x se considera "columna derecha"
+  //   - _desplazamientoColumnaDerecha: cuánto se corre hacia la izquierda
+  static const double _limiteColumnaDerecha = 0.85;
+  static const double _desplazamientoColumnaDerecha = 0.04;
+
+  double _xLinea(double x) {
+    if (x > _limiteColumnaDerecha) return x - _desplazamientoColumnaDerecha;
+    return x;
+  }
+
+  double _carrilPara(NodoGrafo a, NodoGrafo b) {
+    const limiteMitad = 0.50;
+    final aArriba = a.y < limiteMitad;
+    final bArriba = b.y < limiteMitad;
+
+    if (aArriba && bArriba) return _carrilArriba;
+    if (!aArriba && !bArriba) return _carrilAbajo;
+    return _carrilCentro;
+  }
 
   List<Offset> _construirOffsets(Size size) {
-    Offset off(NodoGrafo n) => Offset(n.x * size.width, n.y * size.height);
+    Offset off(double x, double y) => Offset(x * size.width, y * size.height);
 
-    final resultado = <Offset>[off(puntos.first)];
-    int i = 0;
-    while (i < puntos.length - 1) {
-      final anclaAntes = puntos[i];
+    // Arranca en el punto real, con un tramito horizontal recto hasta la
+    // "x desplazada" antes de empezar a bajar/subir — así nunca hay diagonal.
+    final resultado = <Offset>[
+      off(puntos.first.x, puntos.first.y),
+      off(_xLinea(puntos.first.x), puntos.first.y),
+    ];
 
-      int j = i + 1;
-      final corredores = <NodoGrafo>[];
-      while (j < puntos.length && _esCorredor(puntos[j])) {
-        corredores.add(puntos[j]);
-        j++;
-      }
+    for (int i = 1; i < puntos.length; i++) {
+      final a = puntos[i - 1];
+      final b = puntos[i];
+      final carril = _carrilPara(a, b);
 
-      if (corredores.isEmpty) {
-        resultado.add(off(puntos[j]));
-        i = j;
-        continue;
-      }
-
-      if (j >= puntos.length) {
-        for (final c in corredores) {
-          resultado.add(off(c));
-        }
-        i = j;
-        continue;
-      }
-
-      final anclaDespues = puntos[j];
-
-      if (corredores.length == 1) {
-        final y = corredores[0].y * size.height;
-        resultado.add(Offset(anclaAntes.x * size.width, y));
-        resultado.add(Offset(anclaDespues.x * size.width, y));
-      } else {
-        resultado.add(Offset(anclaAntes.x * size.width, corredores.first.y * size.height));
-        for (final c in corredores) {
-          resultado.add(off(c));
-        }
-        resultado.add(Offset(anclaDespues.x * size.width, corredores.last.y * size.height));
-      }
-
-      resultado.add(off(anclaDespues));
-      i = j;
+      resultado.add(off(_xLinea(a.x), carril));
+      resultado.add(off(_xLinea(b.x), carril));
+      resultado.add(off(_xLinea(b.x), b.y));
+      // Tramito horizontal recto de vuelta a la x real del punto de llegada.
+      resultado.add(off(b.x, b.y));
     }
-
     return resultado;
   }
 
