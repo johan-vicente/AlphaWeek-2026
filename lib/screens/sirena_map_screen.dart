@@ -19,23 +19,32 @@ const Map<String, String> _nombreCortoSucursal = {
   'las_americas': 'Las Américas',
 };
 
-const double _aspectRatioMapa = 1454 / 1710;
+// Cada sucursal tiene su propia imagen con proporciones distintas.
+const Map<String, double> _aspectRatioPorSucursal = {
+  'autopista_san_isidro': 1454 / 1710,
+  'las_americas': 1468 / 1738,
+  'villa_mella': 1465 / 1748, // provisional hasta cargar la imagen real
+};
+
+// Sucursales cuya imagen YA trae impresas las palabras "Entrada"/"Salida".
+// Las que no están aquí reciben la etiqueta agregada por la app.
+const Set<String> _sucursalesConEntradaSalidaImpresa = {'autopista_san_isidro'};
 
 // ---------------------------------------------------------------------
 // CARRILES DE CRUCE de la ruta (San Isidro) — ajústalos tú mismo aquí si
 // hace falta más calibración. Son fracciones 0.0-1.0 de la altura de la
 // imagen. Deben caer en el espacio ABIERTO (amarillo) entre las filas de
-// pasillos, nunca encima de una barra blanca:
-//   - _carrilArriba: espacio abierto entre las cajas y los pasillos 1-6
-//   - _carrilCentro: espacio abierto entre la fila de pasillos 1-6 y la
-//     fila de pasillos 7-15 (solo se usa cuando hay que cruzar de una
-//     mitad de la tienda a la otra)
-//   - _carrilAbajo: espacio abierto entre los pasillos 7-15 y la franja
-//     de Carnes/Jugos/Embutidos
-// Subir un valor = número más chico. Bajar = número más grande.
+// pasillos, nunca encima de una barra blanca.
 const double _carrilArriba = 0.21;
 const double _carrilCentro = 0.55;
 const double _carrilAbajo = 0.89;
+
+// Entrada, Hortalizas, Panadería y Lácteos de San Isidro están casi en la
+// misma columna derecha — sin este ajuste, la línea que pasa por ahí queda
+// tapando esos íconos. Cualquier tramo que viaje por esa columna se corre
+// un poco a la izquierda.
+const double _limiteColumnaDerecha = 0.85;
+const double _desplazamientoColumnaDerecha = 0.04;
 // ---------------------------------------------------------------------
 
 class SirenaMapScreen extends StatefulWidget {
@@ -72,6 +81,9 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
   Map<dynamic, dynamic> _cajas = {};
 
   bool get _hayRutaCalculada => _rutaActual.isNotEmpty;
+
+  double get _aspectRatioMapa =>
+      _aspectRatioPorSucursal[widget.sucursalId] ?? (1454 / 1710);
 
   @override
   void initState() {
@@ -174,7 +186,6 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
       return;
     }
 
-
     final destinos = <String>{};
     for (final item in items) {
       final nodoId = CategoriaNodoMap.nodoParaCategoria(widget.sucursalId, item.producto.categoria);
@@ -200,29 +211,6 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
       _esperandoOrigenManual = false;
       _mostrarBuscador = false;
     });
-  }
-  void _mostrarDialogoCarritoVacio() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tu carrito está vacío'),
-        content: const Text('Llena tu carrito para que podamos guiarte hasta tus productos.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // cierra el diálogo
-              _irAHome(); // ya existe, navega al Home (donde se llena el carrito)
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.azulSirena),
-            child: const Text('Llenar carrito', style: TextStyle(color: AppColors.blanco)),
-          ),
-        ],
-      ),
-    );
   }
 
   List<String> _ordenarDestinosSegunRuta(List<String> ruta, Set<String> destinos) {
@@ -295,6 +283,30 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
 
   void _mostrarMensaje(String texto) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+  }
+
+  void _mostrarDialogoCarritoVacio() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tu carrito está vacío'),
+        content: const Text('Llena tu carrito para que podamos guiarte hasta tus productos.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _irAHome();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.azulSirena),
+            child: const Text('Llenar carrito', style: TextStyle(color: AppColors.blanco)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _abrirMenuEntrada() {
@@ -457,7 +469,7 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
             Text(
               'Todavía no hay grafo cargado para esta sucursal en Firebase '
                   '(sucursales/${widget.sucursalId}/grafo/nodos está vacío). '
-                  'Corre cargarGrafoSanIsidro() una vez desde main.dart.',
+                  'Corre el script de carga correspondiente desde main.dart.',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.grey),
             ),
@@ -495,6 +507,7 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
                           painter: _RutaPainter(puntos: puntosRuta, color: AppColors.azulSirena),
                         ),
                       ),
+                    ..._construirEtiquetasEntradaSalida(),
                     ..._construirEtiquetasPasillo(),
                     ..._construirNodosTactiles(),
                     ..._construirCajas(),
@@ -508,6 +521,37 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
         if (_mostrarBuscador) _construirBuscador(),
       ],
     );
+  }
+
+  /// Etiqueta de texto "Entrada"/"Salida" agregada por la app, solo para
+  /// sucursales cuya imagen NO las trae ya impresas (San Isidro sí las
+  /// trae, no se duplica ahí).
+  List<Widget> _construirEtiquetasEntradaSalida() {
+    if (_sucursalesConEntradaSalidaImpresa.contains(widget.sucursalId)) return [];
+
+    final widgets = <Widget>[];
+    for (final entry in {'entrada': 'Entrada', 'salida': 'Salida'}.entries) {
+      final nodo = _nodos[entry.key];
+      if (nodo == null) continue;
+      final y = nodo.y + 0.055; // justo debajo del círculo
+
+      widgets.add(
+        Positioned.fill(
+          child: Align(
+            alignment: Alignment(nodo.x * 2 - 1, y * 2 - 1),
+            child: Text(
+              entry.value,
+              style: const TextStyle(
+                color: AppColors.azulSirena,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return widgets;
   }
 
   List<Widget> _construirEtiquetasPasillo() {
@@ -560,8 +604,6 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
       if (nodo.tipo == 'caja') continue;
 
       final esOrigen = nodo.id == _origenId;
-      // Entrada/Salida se quedan un poco más grandes (son el punto de
-      // referencia principal); pasillos Y zonas usan el mismo tamaño chico.
       final esEntradaOSalida = nodo.tipo == 'entrada' || nodo.tipo == 'salida';
       final tamano = esEntradaOSalida ? 32.0 : 26.0;
 
@@ -746,15 +788,6 @@ class _RutaPainter extends CustomPainter {
 
   _RutaPainter({required this.puntos, required this.color});
 
-  // Entrada, Hortalizas, Panadería y Lácteos están casi en la misma
-  // columna derecha (x muy parecida) — sin este ajuste, la línea que pasa
-  // por ahí queda tapando esos íconos. Cualquier tramo que viaje por esa
-  // columna se corre un poco a la izquierda. Ajusta tú mismo si hace falta:
-  //   - _limiteColumnaDerecha: a partir de qué x se considera "columna derecha"
-  //   - _desplazamientoColumnaDerecha: cuánto se corre hacia la izquierda
-  static const double _limiteColumnaDerecha = 0.85;
-  static const double _desplazamientoColumnaDerecha = 0.04;
-
   double _xLinea(double x) {
     if (x > _limiteColumnaDerecha) return x - _desplazamientoColumnaDerecha;
     return x;
@@ -773,8 +806,6 @@ class _RutaPainter extends CustomPainter {
   List<Offset> _construirOffsets(Size size) {
     Offset off(double x, double y) => Offset(x * size.width, y * size.height);
 
-    // Arranca en el punto real, con un tramito horizontal recto hasta la
-    // "x desplazada" antes de empezar a bajar/subir — así nunca hay diagonal.
     final resultado = <Offset>[
       off(puntos.first.x, puntos.first.y),
       off(_xLinea(puntos.first.x), puntos.first.y),
@@ -788,7 +819,6 @@ class _RutaPainter extends CustomPainter {
       resultado.add(off(_xLinea(a.x), carril));
       resultado.add(off(_xLinea(b.x), carril));
       resultado.add(off(_xLinea(b.x), b.y));
-      // Tramito horizontal recto de vuelta a la x real del punto de llegada.
       resultado.add(off(b.x, b.y));
     }
     return resultado;
