@@ -45,31 +45,28 @@ class RutaService {
     return camino.reversed.toList();
   }
 
-  /// Distancia real (euclidiana, sumando cada tramo del camino) usando las
-  /// coordenadas x/y de los nodos. Se usa para desempatar cuando dos
-  /// destinos quedan a la misma cantidad de pasos (hops) del grafo — algo
-  /// muy común en este grafo porque casi todo pasa por el mismo corredor
-  /// central, así que "cantidad de pasos" sola no distingue bien cuál está
-  /// geográficamente más cerca.
-  double _distanciaReal(Map<String, NodoGrafo> nodos, List<String> camino) {
-    double total = 0;
-    for (int i = 1; i < camino.length; i++) {
-      final a = nodos[camino[i - 1]];
-      final b = nodos[camino[i]];
-      if (a == null || b == null) continue;
-      final dx = a.x - b.x;
-      final dy = a.y - b.y;
-      total += math.sqrt(dx * dx + dy * dy);
-    }
-    return total;
+  /// Distancia en línea recta entre dos nodos, usando sus coordenadas x/y.
+  /// Se usa para decidir cuál destino está geográficamente más cerca —
+  /// NO se usa la distancia del camino del grafo (BFS), porque ese camino
+  /// pasa por nodos de corredor cuya posición es una abstracción lógica,
+  /// no un lugar real, y distorsiona la comparación (ej. hacía que un
+  /// destino en línea recta más lejos pareciera "más cercano" solo porque
+  /// su camino en el grafo tenía menos distancia acumulada).
+  double _distanciaDirecta(Map<String, NodoGrafo> nodos, String a, String b) {
+    final na = nodos[a];
+    final nb = nodos[b];
+    if (na == null || nb == null) return double.infinity;
+    final dx = na.x - nb.x;
+    final dy = na.y - nb.y;
+    return math.sqrt(dx * dx + dy * dy);
   }
 
   /// Calcula una ruta que visita todos los [destinos] partiendo de [origen],
   /// usando la heurística del vecino más cercano (suficiente para 2-4 destinos).
-  /// El "más cercano" se decide por distancia REAL en el mapa, no solo por
-  /// cantidad de pasos del grafo — así el orden de visita no depende de en
-  /// qué orden vinieron los destinos (ej. orden del carrito), sino de cuál
-  /// está geográficamente más cerca de verdad.
+  /// "Más cercano" se decide por distancia real en línea recta entre
+  /// coordenadas, no por la ruta del grafo — así el orden de visita refleja
+  /// la cercanía geográfica real, no un artefacto de cómo está armado el
+  /// grafo de corredores.
   List<String> calcularRutaMultiDestino(
       Map<String, NodoGrafo> nodos,
       String origen,
@@ -90,7 +87,7 @@ class RutaService {
         final tramo = calcularRuta(nodos, actual, destino);
         if (tramo.isEmpty) continue; // no hay ruta posible a este destino
 
-        final distancia = _distanciaReal(nodos, tramo);
+        final distancia = _distanciaDirecta(nodos, actual, destino);
         if (masCercano == null || distancia < mejorDistancia) {
           masCercano = destino;
           mejorTramo = tramo;
