@@ -45,16 +45,6 @@ Representando a ITLA en AlphaWeek 2026:
 - **Merly** — Desarrollo (Flutter)
 - Equipo de Multimedia — Diseño UI/UX y material de presentación
 
-## 📦 Cómo correrlo
-
-1. Clona el repo
-2. `flutter pub get`
-3. Configura tu propio proyecto de Firebase (Realtime Database) y agrega tu `google-services.json` en `android/app/`
-4. Corre con tu propia API key de Claude:
-```bash
-   flutter run --dart-define=CLAUDE_API_KEY=tu_key_aqui
-```
-
 ---
 
 *Proyecto desarrollado como parte de la competencia AlphaRamos Week 2026 organizada por Grupo Ramos. Todo el contenido de marca (Sirena, SirenaMás) se usa con fines demostrativos y educativos dentro del contexto de la competencia.*
