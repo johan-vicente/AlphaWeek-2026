@@ -11,6 +11,9 @@ import '../widgets/valoracion_chat_popup.dart';
 import 'product_result_screen.dart';
 import 'cart_screen.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 
 class ChatIAScreen extends StatefulWidget {
   const ChatIAScreen({super.key});
@@ -35,6 +38,8 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   bool _speechEnabled = false;
   bool _isListening = false;
   String _textoPrevio = '';
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -123,6 +128,102 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
 
     try {
       final resp = await ClaudeService().enviarMensajeConTools(texto);
+      final textoRespuesta = ClaudeService().extraerTexto(resp);
+      final productos = List<Producto>.from(ToolsIA.ultimosProductosMostrados);
+
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: textoRespuesta,
+          esDeUsuario: false,
+          productos: productos.isNotEmpty ? productos : null,
+          mostrarBotonCarrito: ToolsIA.seAgregoAlCarrito,
+        ));
+        _cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: 'Hubo un problema conectando con el asistente. Intenta de nuevo.',
+          esDeUsuario: false,
+        ));
+        _cargando = false;
+      });
+    }
+    _scrollAlFinal();
+  }
+
+  Future<void> _tomarFoto() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Tomar foto'),
+              onTap: () {
+                Navigator.pop(context);
+                _procesarImagen(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Elegir de galería'),
+              onTap: () {
+                Navigator.pop(context);
+                _procesarImagen(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _procesarImagen(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 70,
+    );
+    if (image == null) return;
+
+    setState(() {
+      _cargando = true;
+      _mensajes.add(ChatMessage(
+        texto: 'Enviando imagen...',
+        esDeUsuario: true,
+        imagePath: image.path,
+      ));
+    });
+    _scrollAlFinal();
+
+    try {
+      final bytes = await image.readAsBytes();
+      final base64String = base64Encode(bytes);
+      await _enviarImagenClaude(base64String);
+    } catch (e) {
+      setState(() {
+        _cargando = false;
+        _mensajes.add(ChatMessage(
+          texto: 'Error procesando la imagen.',
+          esDeUsuario: false,
+        ));
+      });
+      _scrollAlFinal();
+    }
+  }
+
+  Future<void> _enviarImagenClaude(String base64String) async {
+    ToolsIA.ultimosProductosMostrados = [];
+    ToolsIA.seAgregoAlCarrito = false;
+
+    try {
+      final resp = await ClaudeService().enviarMensajeConTools(
+        'Analiza esta imagen e identifica el producto. Usa identificar_producto_por_imagen para buscarlo en el catálogo.',
+        base64Image: base64String,
+      );
       final textoRespuesta = ClaudeService().extraerTexto(resp);
       final productos = List<Producto>.from(ToolsIA.ultimosProductosMostrados);
 
@@ -275,6 +376,22 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       crossAxisAlignment:
       esUsuario ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
+        if (mensaje.imagePath != null)
+          Align(
+            alignment: esUsuario ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 4, top: 4),
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                image: DecorationImage(
+                  image: FileImage(File(mensaje.imagePath!)),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
         Align(
           alignment: esUsuario ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
@@ -444,6 +561,14 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
                 onSubmitted: (_) => _enviarMensaje(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: AppColors.amarilloSirena,
+              child: IconButton(
+                icon: const Icon(Icons.camera_alt, color: AppColors.negro, size: 20),
+                onPressed: () => _tomarFoto(),
               ),
             ),
             const SizedBox(width: 8),
