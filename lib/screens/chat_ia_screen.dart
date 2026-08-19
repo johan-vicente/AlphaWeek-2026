@@ -335,13 +335,13 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
         elevation: 1,
         iconTheme: const IconThemeData(color: AppColors.negro),
         title: const Text(
-          'Sira, tu IA zerca de ti',
+          'Sira',
           style: TextStyle(color: AppColors.negro, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Finalizar sesión',
+            icon: const Icon(Icons.star),
+            tooltip: 'Valorar al agente',
             onPressed: _cerrarChat,
           ),
           IconButton(
@@ -593,7 +593,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
             CircleAvatar(
               backgroundColor: AppColors.amarilloSirena,
               child: IconButton(
-                icon: const Icon(Icons.camera_alt, color: AppColors.negro, size: 20),
+                icon: const Icon(Icons.camera_alt, color: AppColors.azulSirena, size: 20),
                 onPressed: () => _tomarFoto(),
               ),
             ),
@@ -601,7 +601,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
             CircleAvatar(
               backgroundColor: _isListening ? Colors.redAccent : AppColors.amarilloSirena,
               child: IconButton(
-                icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: AppColors.negro, size: 20),
+                icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: AppColors.azulSirena, size: 20),
                 onPressed: () {
                   if (_isListening) {
                     _detenerEscucha();

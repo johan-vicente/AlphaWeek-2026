@@ -61,7 +61,10 @@ class HeaderSirena extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           child: Row(
             children: [
-              IconButton(icon: const Icon(Icons.menu, color: AppColors.azulSirena), onPressed: onMenuTap),
+              IconButton(
+                icon: const Icon(Icons.menu, color: AppColors.azulSirena),
+                onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
+              ),
               GestureDetector(
                 onTap: onLogoTap,
                 child: SvgPicture.asset('assets/branding/logo_sirena.svg', height: 26),
@@ -81,7 +84,7 @@ class HeaderSirena extends StatelessWidget {
                           onChanged: onSearchChanged,
                           decoration: const InputDecoration(
                             hintText: 'Buscar en Sirena',
-                            hintStyle: TextStyle(color: Colors.grey),
+                            hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
                             border: InputBorder.none,
                             isCollapsed: true,
                             contentPadding: EdgeInsets.only(left: 12),
