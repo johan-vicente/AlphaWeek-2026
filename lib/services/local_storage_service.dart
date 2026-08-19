@@ -4,6 +4,7 @@ class LocalStorageService {
   static const String productosBoxName = 'productos_box';
   static const String grafosBoxName = 'grafos_box';
   static const String cajasBoxName = 'cajas_box';
+  static const String chatIaBoxName = 'chat_ia_box';
 
   /// Inicializa Hive y abre las cajas de almacenamiento
   static Future<void> init() async {
@@ -11,6 +12,7 @@ class LocalStorageService {
     await Hive.openBox(productosBoxName);
     await Hive.openBox(grafosBoxName);
     await Hive.openBox(cajasBoxName);
+    await Hive.openBox(chatIaBoxName);
   }
 
   // --- Productos ---
@@ -56,5 +58,16 @@ class LocalStorageService {
     final data = box.get(sucursalId);
     if (data == null) return null;
     return Map<dynamic, dynamic>.from(data);
+  }
+
+  // --- Datos del asistente de IA (ID ficticio, edad, resumen) ---
+  static Future<void> guardarDatoChatIA(String clave, dynamic valor) async {
+    final box = Hive.box(chatIaBoxName);
+    await box.put(clave, valor);
+  }
+
+  static dynamic obtenerDatoChatIA(String clave) {
+    final box = Hive.box(chatIaBoxName);
+    return box.get(clave);
   }
 }
