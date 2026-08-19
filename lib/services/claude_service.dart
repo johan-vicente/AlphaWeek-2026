@@ -1,0 +1,152 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'tools_ia.dart';
+
+/// Servicio base de comunicación con la API de Claude (Anthropic).
+/// Maneja el historial de la conversación activa y el resumen al cerrar.
+class ClaudeService {
+  static final ClaudeService _instancia = ClaudeService._interno();
+  factory ClaudeService() => _instancia;
+  ClaudeService._interno();
+
+  static const String _urlBase = 'https://api.anthropic.com/v1/messages';
+  static const String _modelo = 'claude-haiku-4-5-20251001';
+  static const String _apiKey = String.fromEnvironment('CLAUDE_API_KEY');
+
+  final List<Map<String, dynamic>> _historial = [];
+
+  List<Map<String, dynamic>> get historial => List.unmodifiable(_historial);
+
+  Future<Map<String, dynamic>> enviarMensaje(String mensajeUsuario) async {
+    if (_apiKey.isEmpty) {
+      throw Exception(
+        'CLAUDE_API_KEY vacía. Revisa el --dart-define en la Run Configuration.',
+      );
+    }
+
+    _historial.add({'role': 'user', 'content': mensajeUsuario});
+    final data = await _llamarAPI();
+    _historial.add({'role': 'assistant', 'content': data['content']});
+    return data;
+  }
+
+  Future<Map<String, dynamic>> enviarMensajeConTools(
+      String mensajeUsuario,
+      ) async {
+    if (_apiKey.isEmpty) {
+      throw Exception(
+        'CLAUDE_API_KEY vacía. Revisa el --dart-define en la Run Configuration.',
+      );
+    }
+
+    _historial.add({'role': 'user', 'content': mensajeUsuario});
+
+    Map<String, dynamic> data = await _llamarAPI(tools: ToolsIA.definiciones);
+
+    while (data['stop_reason'] == 'tool_use') {
+      _historial.add({'role': 'assistant', 'content': data['content']});
+
+      final bloques = data['content'] as List<dynamic>;
+      final resultadosTools = <Map<String, dynamic>>[];
+
+      for (final bloque in bloques) {
+        if (bloque['type'] == 'tool_use') {
+          final resultado = await ToolsIA.ejecutar(
+            bloque['name'] as String,
+            bloque['input'] as Map<String, dynamic>,
+          );
+          resultadosTools.add({
+            'type': 'tool_result',
+            'tool_use_id': bloque['id'],
+            'content': jsonEncode(resultado),
+          });
+        }
+      }
+
+      _historial.add({'role': 'user', 'content': resultadosTools});
+      data = await _llamarAPI(tools: ToolsIA.definiciones);
+    }
+
+    _historial.add({'role': 'assistant', 'content': data['content']});
+    return data;
+  }
+
+  Future<Map<String, dynamic>> _llamarAPI({
+    List<Map<String, dynamic>>? tools,
+  }) async {
+    final body = {
+      'model': _modelo,
+      'max_tokens': 2048,
+      'messages': _historial,
+      if (tools != null && tools.isNotEmpty) 'tools': tools,
+    };
+
+    final respuesta = await http
+        .post(
+      Uri.parse(_urlBase),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': _apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: jsonEncode(body),
+    )
+        .timeout(const Duration(seconds: 20));
+
+    if (respuesta.statusCode != 200) {
+      throw Exception(
+        'Error de Claude API (${respuesta.statusCode}): ${respuesta.body}',
+      );
+    }
+
+    return jsonDecode(respuesta.body) as Map<String, dynamic>;
+  }
+
+  String extraerTexto(Map<String, dynamic> respuesta) {
+    final bloques = respuesta['content'] as List<dynamic>? ?? [];
+    return bloques
+        .where((b) => b['type'] == 'text')
+        .map((b) => b['text'] as String)
+        .join('\n');
+  }
+
+  Future<String> generarResumen() async {
+    if (_historial.isEmpty || _apiKey.isEmpty) return '';
+
+    final resumenRequest = {
+      'model': _modelo,
+      'max_tokens': 150,
+      'messages': [
+        ..._historial,
+        {
+          'role': 'user',
+          'content':
+          'Resume esta conversación en 2-3 líneas cortas, en español, '
+              'mencionando qué productos o categorías buscó el usuario y si '
+              'mencionó algún presupuesto. Responde SOLO el resumen, sin preámbulo.',
+        },
+      ],
+    };
+
+    final respuesta = await http
+        .post(
+      Uri.parse(_urlBase),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': _apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: jsonEncode(resumenRequest),
+    )
+        .timeout(const Duration(seconds: 15));
+
+    if (respuesta.statusCode != 200) return '';
+
+    final data = jsonDecode(respuesta.body) as Map<String, dynamic>;
+    return extraerTexto(data);
+  }
+
+  void reiniciarConversacion() {
+    _historial.clear();
+  }
+}
