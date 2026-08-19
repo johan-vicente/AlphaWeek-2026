@@ -10,6 +10,7 @@ import '../utils/app_colors.dart';
 import '../widgets/valoracion_chat_popup.dart';
 import 'product_result_screen.dart';
 import 'cart_screen.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class ChatIAScreen extends StatefulWidget {
   const ChatIAScreen({super.key});
@@ -30,7 +31,64 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   bool _cargando = false;
   bool _modoOscuro = false;
 
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  bool _isListening = false;
+  String _textoPrevio = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize(
+      onError: (val) => print('onError: $val'),
+      onStatus: (val) {
+        if (val == 'done' || val == 'notListening') {
+          if (mounted) {
+            setState(() {
+              _isListening = false;
+            });
+          }
+        }
+      },
+    );
+    if (mounted) setState(() {});
+  }
+
+  void _iniciarEscucha() async {
+    if (_speechEnabled) {
+      _textoPrevio = _inputController.text;
+      await _speechToText.listen(
+        onResult: (result) {
+          setState(() {
+            _inputController.text = _textoPrevio.isEmpty
+                ? result.recognizedWords
+                : '$_textoPrevio ${result.recognizedWords}';
+            _inputController.selection = TextSelection.fromPosition(
+                TextPosition(offset: _inputController.text.length));
+          });
+        },
+      );
+      setState(() {
+        _isListening = true;
+      });
+    } else {
+      _initSpeech();
+    }
+  }
+
+  void _detenerEscucha() async {
+    await _speechToText.stop();
+    setState(() {
+      _isListening = false;
+    });
+  }
+
   Future<void> _enviarMensaje([String? textoForzado]) async {
+    if (_isListening) _detenerEscucha();
     final texto = (textoForzado ?? _inputController.text).trim();
     if (texto.isEmpty || _cargando) return;
 
@@ -386,6 +444,20 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
                 onSubmitted: (_) => _enviarMensaje(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: _isListening ? Colors.redAccent : AppColors.amarilloSirena,
+              child: IconButton(
+                icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: AppColors.negro, size: 20),
+                onPressed: () {
+                  if (_isListening) {
+                    _detenerEscucha();
+                  } else {
+                    _iniciarEscucha();
+                  }
+                },
               ),
             ),
             const SizedBox(width: 8),
