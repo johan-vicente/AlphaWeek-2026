@@ -1,5 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'tools_ia.dart';
+
+const String _systemPromptChat =
+    'Eres Sira, el asistente de compras de Sirena. Respondes siempre en '
+    'español, de forma breve y amigable. IMPORTANTE: nunca uses formato '
+    'markdown (nada de **negritas**, guiones de lista, ni encabezados) — '
+    'responde en texto plano simple, como si fuera un mensaje de chat normal.';
 
 /// Servicio base de comunicación con la API de Claude (Anthropic).
 /// Maneja el historial de la conversación activa y el resumen al cerrar.
@@ -16,41 +23,85 @@ class ClaudeService {
 
   List<Map<String, dynamic>> get historial => List.unmodifiable(_historial);
 
-  /// Envía un mensaje del usuario a Claude y devuelve la respuesta completa
-  /// (incluye texto y, más adelante en el Issue 2, posibles tool_use).
-  /// [tools] se deja opcional para que el Issue 2 lo conecte sin tocar este método.
-  Future<Map<String, dynamic>> enviarMensaje(
-      String mensajeUsuario, {
-        List<Map<String, dynamic>>? tools,
-      }) async {
+  /// Chat simple, sin tools.
+  Future<Map<String, dynamic>> enviarMensaje(String mensajeUsuario) async {
     if (_apiKey.isEmpty) {
       throw Exception(
         'CLAUDE_API_KEY vacía. Revisa el --dart-define en la Run Configuration.',
       );
     }
 
-    _historial.add({
-      'role': 'user',
-      'content': mensajeUsuario,
-    });
+    _historial.add({'role': 'user', 'content': mensajeUsuario});
+    final data = await _llamarAPI();
+    _historial.add({'role': 'assistant', 'content': data['content']});
+    return data;
+  }
 
+  /// Chat con tool use activo: ejecuta las tools que Claude pida y sigue
+  /// el ciclo hasta que responda con texto final.
+  Future<Map<String, dynamic>> enviarMensajeConTools(
+    String mensajeUsuario,
+  ) async {
+    if (_apiKey.isEmpty) {
+      throw Exception(
+        'CLAUDE_API_KEY vacía. Revisa el --dart-define en la Run Configuration.',
+      );
+    }
+
+    _historial.add({'role': 'user', 'content': mensajeUsuario});
+
+    Map<String, dynamic> data = await _llamarAPI(tools: ToolsIA.definiciones);
+
+    while (data['stop_reason'] == 'tool_use') {
+      _historial.add({'role': 'assistant', 'content': data['content']});
+
+      final bloques = data['content'] as List<dynamic>;
+      final resultadosTools = <Map<String, dynamic>>[];
+
+      for (final bloque in bloques) {
+        if (bloque['type'] == 'tool_use') {
+          final resultado = await ToolsIA.ejecutar(
+            bloque['name'] as String,
+            bloque['input'] as Map<String, dynamic>,
+          );
+          resultadosTools.add({
+            'type': 'tool_result',
+            'tool_use_id': bloque['id'],
+            'content': jsonEncode(resultado),
+          });
+        }
+      }
+
+      _historial.add({'role': 'user', 'content': resultadosTools});
+      data = await _llamarAPI(tools: ToolsIA.definiciones);
+    }
+
+    _historial.add({'role': 'assistant', 'content': data['content']});
+    return data;
+  }
+
+  /// Llamada cruda a la API, reutilizada por los métodos de arriba/abajo.
+  Future<Map<String, dynamic>> _llamarAPI({
+    List<Map<String, dynamic>>? tools,
+  }) async {
     final body = {
       'model': _modelo,
       'max_tokens': 2048,
+      'system': _systemPromptChat,
       'messages': _historial,
       if (tools != null && tools.isNotEmpty) 'tools': tools,
     };
 
     final respuesta = await http
         .post(
-      Uri.parse(_urlBase),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': _apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: jsonEncode(body),
-    )
+          Uri.parse(_urlBase),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': _apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: jsonEncode(body),
+        )
         .timeout(const Duration(seconds: 20));
 
     if (respuesta.statusCode != 200) {
@@ -59,19 +110,10 @@ class ClaudeService {
       );
     }
 
-    final data = jsonDecode(respuesta.body) as Map<String, dynamic>;
-
-    // Guardamos la respuesta del asistente en el historial para mantener contexto
-    _historial.add({
-      'role': 'assistant',
-      'content': data['content'],
-    });
-
-    return data;
+    return jsonDecode(respuesta.body) as Map<String, dynamic>;
   }
 
-  /// Extrae solo el texto plano de una respuesta (ignora bloques de tool_use).
-  /// Útil para el Día 1 (chat básico sin tools todavía).
+  /// Extrae solo el texto plano de una respuesta (ignora bloques tool_use).
   String extraerTexto(Map<String, dynamic> respuesta) {
     final bloques = respuesta['content'] as List<dynamic>? ?? [];
     return bloques
@@ -80,11 +122,9 @@ class ClaudeService {
         .join('\n');
   }
 
-  /// Pide a Claude un resumen corto (2-3 líneas) de la conversación actual,
-  /// SIN agregar esa petición al historial visible del chat.
+  /// Resumen corto (2-3 líneas) de la conversación, sin ensuciar el historial visible.
   Future<String> generarResumen() async {
-    if (_historial.isEmpty) return '';
-    if (_apiKey.isEmpty) return '';
+    if (_historial.isEmpty || _apiKey.isEmpty) return '';
 
     final resumenRequest = {
       'model': _modelo,
@@ -94,7 +134,7 @@ class ClaudeService {
         {
           'role': 'user',
           'content':
-          'Resume esta conversación en 2-3 líneas cortas, en español, '
+              'Resume esta conversación en 2-3 líneas cortas, en español, '
               'mencionando qué productos o categorías buscó el usuario y si '
               'mencionó algún presupuesto. Responde SOLO el resumen, sin preámbulo.',
         },
@@ -103,14 +143,14 @@ class ClaudeService {
 
     final respuesta = await http
         .post(
-      Uri.parse(_urlBase),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': _apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: jsonEncode(resumenRequest),
-    )
+          Uri.parse(_urlBase),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': _apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: jsonEncode(resumenRequest),
+        )
         .timeout(const Duration(seconds: 15));
 
     if (respuesta.statusCode != 200) return '';
