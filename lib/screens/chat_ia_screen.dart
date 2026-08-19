@@ -14,6 +14,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ChatIAScreen extends StatefulWidget {
   const ChatIAScreen({super.key});
@@ -96,6 +97,18 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     if (_isListening) _detenerEscucha();
     final texto = (textoForzado ?? _inputController.text).trim();
     if (texto.isEmpty || _cargando) return;
+
+    final conectividad = await Connectivity().checkConnectivity();
+    if (conectividad.contains(ConnectivityResult.none)) {
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: 'No tienes conexión a internet. Revisa tu red y vuelve a intentar.',
+          esDeUsuario: false,
+        ));
+      });
+      _scrollAlFinal();
+      return;
+    }
 
     if (_mensajesEnviadosSesion >= _maxMensajesPorSesion) {
       setState(() {
@@ -216,6 +229,19 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   }
 
   Future<void> _enviarImagenClaude(String base64String) async {
+    final conectividad = await Connectivity().checkConnectivity();
+    if (conectividad.contains(ConnectivityResult.none)) {
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: 'No tienes conexión a internet para analizar la foto. Revisa tu red.',
+          esDeUsuario: false,
+        ));
+        _cargando = false;
+      });
+      _scrollAlFinal();
+      return;
+    }
+
     ToolsIA.ultimosProductosMostrados = [];
     ToolsIA.seAgregoAlCarrito = false;
 

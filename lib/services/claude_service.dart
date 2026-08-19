@@ -9,8 +9,10 @@ const String _systemPromptChat =
     'responde en texto plano simple, como si fuera un mensaje de chat normal. '
     'Si el usuario envía una imagen, analízala e identifica el producto. Usa '
     'la tool identificar_producto_por_imagen para buscarlo en el catálogo. '
-    'Si la foto muestra algo que no cuadra con el catálogo de Sirena o el '
-    'producto no se encuentra, dilo claramente y no inventes un producto falso.';
+    'Si la herramienta de búsqueda (ya sea por texto o por imagen) devuelve 0 resultados, '
+    'comunícale al usuario que no tenemos ese producto. NUNCA inventes productos, '
+    'marcas o precios que no estén en tu base de datos. Si la foto muestra algo que '
+    'no cuadra con un producto de supermercado o no se encuentra, dilo claramente sin falsos positivos.';
 
 /// Servicio base de comunicación con la API de Claude (Anthropic).
 /// Maneja el historial de la conversación activa y el resumen al cerrar.

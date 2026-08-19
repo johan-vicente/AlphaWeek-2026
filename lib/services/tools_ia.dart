@@ -237,6 +237,19 @@ class ToolsIA {
       }
     }
 
+    if (seleccionados.isEmpty && candidatos.isNotEmpty) {
+      candidatos.sort((a, b) => a.calcularPrecio().compareTo(b.calcularPrecio()));
+      final masBarato = candidatos.first;
+      ultimosProductosMostrados.add(masBarato);
+      return {
+        'presupuesto_pedido': presupuesto,
+        'total_aproximado': masBarato.calcularPrecio(),
+        'mensaje': 'El presupuesto es demasiado bajo para armar una lista. El producto más económico disponible cuesta ${masBarato.calcularPrecio()} pesos.',
+        'mejor_aproximacion_mas_barata': _productoParaIA(masBarato),
+        'productos': [],
+      };
+    }
+
     ultimosProductosMostrados.addAll(seleccionados);
 
     return {
