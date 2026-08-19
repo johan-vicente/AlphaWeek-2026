@@ -40,8 +40,8 @@ class ClaudeService {
   /// Chat con tool use activo: ejecuta las tools que Claude pida y sigue
   /// el ciclo hasta que responda con texto final.
   Future<Map<String, dynamic>> enviarMensajeConTools(
-      String mensajeUsuario,
-      ) async {
+    String mensajeUsuario,
+  ) async {
     if (_apiKey.isEmpty) {
       throw Exception(
         'CLAUDE_API_KEY vacía. Revisa el --dart-define en la Run Configuration.',
@@ -94,14 +94,14 @@ class ClaudeService {
 
     final respuesta = await http
         .post(
-      Uri.parse(_urlBase),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': _apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: jsonEncode(body),
-    )
+          Uri.parse(_urlBase),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': _apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: jsonEncode(body),
+        )
         .timeout(const Duration(seconds: 20));
 
     if (respuesta.statusCode != 200) {
@@ -134,7 +134,7 @@ class ClaudeService {
         {
           'role': 'user',
           'content':
-          'Resume esta conversación en 2-3 líneas cortas, en español, '
+              'Resume esta conversación en 2-3 líneas cortas, en español, '
               'mencionando qué productos o categorías buscó el usuario y si '
               'mencionó algún presupuesto. Responde SOLO el resumen, sin preámbulo.',
         },
@@ -143,14 +143,14 @@ class ClaudeService {
 
     final respuesta = await http
         .post(
-      Uri.parse(_urlBase),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': _apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: jsonEncode(resumenRequest),
-    )
+          Uri.parse(_urlBase),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': _apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: jsonEncode(resumenRequest),
+        )
         .timeout(const Duration(seconds: 15));
 
     if (respuesta.statusCode != 200) return '';
