@@ -2,6 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'tools_ia.dart';
 
+const String _systemPromptChat =
+    'Eres Sira, el asistente de compras de Sirena. Respondes siempre en '
+    'español, de forma breve y amigable. IMPORTANTE: nunca uses formato '
+    'markdown (nada de **negritas**, guiones de lista, ni encabezados) — '
+    'responde en texto plano simple, como si fuera un mensaje de chat normal.';
+
 /// Servicio base de comunicación con la API de Claude (Anthropic).
 /// Maneja el historial de la conversación activa y el resumen al cerrar.
 class ClaudeService {
@@ -17,6 +23,7 @@ class ClaudeService {
 
   List<Map<String, dynamic>> get historial => List.unmodifiable(_historial);
 
+  /// Chat simple, sin tools.
   Future<Map<String, dynamic>> enviarMensaje(String mensajeUsuario) async {
     if (_apiKey.isEmpty) {
       throw Exception(
@@ -30,6 +37,8 @@ class ClaudeService {
     return data;
   }
 
+  /// Chat con tool use activo: ejecuta las tools que Claude pida y sigue
+  /// el ciclo hasta que responda con texto final.
   Future<Map<String, dynamic>> enviarMensajeConTools(
       String mensajeUsuario,
       ) async {
@@ -71,12 +80,14 @@ class ClaudeService {
     return data;
   }
 
+  /// Llamada cruda a la API, reutilizada por los métodos de arriba/abajo.
   Future<Map<String, dynamic>> _llamarAPI({
     List<Map<String, dynamic>>? tools,
   }) async {
     final body = {
       'model': _modelo,
       'max_tokens': 2048,
+      'system': _systemPromptChat,
       'messages': _historial,
       if (tools != null && tools.isNotEmpty) 'tools': tools,
     };
@@ -102,6 +113,7 @@ class ClaudeService {
     return jsonDecode(respuesta.body) as Map<String, dynamic>;
   }
 
+  /// Extrae solo el texto plano de una respuesta (ignora bloques tool_use).
   String extraerTexto(Map<String, dynamic> respuesta) {
     final bloques = respuesta['content'] as List<dynamic>? ?? [];
     return bloques
@@ -110,6 +122,7 @@ class ClaudeService {
         .join('\n');
   }
 
+  /// Resumen corto (2-3 líneas) de la conversación, sin ensuciar el historial visible.
   Future<String> generarResumen() async {
     if (_historial.isEmpty || _apiKey.isEmpty) return '';
 
@@ -146,6 +159,7 @@ class ClaudeService {
     return extraerTexto(data);
   }
 
+  /// Limpia el historial — se llama al cerrar el chat, después de guardar el resumen.
   void reiniciarConversacion() {
     _historial.clear();
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/producto.dart';
 import '../services/firebase_service.dart';
@@ -8,6 +9,7 @@ import '../utils/app_colors.dart';
 import 'product_result_screen.dart';
 import 'bar_scanner_screen.dart';
 import 'cart_screen.dart';
+import 'chat_ia_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,11 +22,22 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseService _service = FirebaseService();
   List<Producto> _productos = [];
   bool _cargando = true;
+  bool _mostrarSaludo = true;
+  Timer? _timerSaludo;
 
   @override
   void initState() {
     super.initState();
     _cargarProductos();
+    _timerSaludo = Timer(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _mostrarSaludo = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timerSaludo?.cancel();
+    super.dispose();
   }
 
   Future<void> _cargarProductos() async {
@@ -48,6 +61,73 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.blanco,
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (child, animation) {
+              return ScaleTransition(
+                scale: animation,
+                alignment: Alignment.centerRight,
+                child: FadeTransition(opacity: animation, child: child),
+              );
+            },
+            child: _mostrarSaludo
+                ? Row(
+              key: const ValueKey('saludo-visible'),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.amarilloSirena,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Text(
+                    '¡Hola! Soy Sira, ¿cómo te ayudo?',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.azulSirena,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+            )
+                : const SizedBox(key: ValueKey('saludo-oculto')),
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChatIAScreen()),
+              );
+            },
+            child: Container(
+              width: 68,
+              height: 68,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/branding/sira_icon.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [

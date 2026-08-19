@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/producto.dart';
 import '../models/nodo_grafo.dart';
 import 'local_storage_service.dart';
+import '../services/firebase_service.dart';
 
 class FirebaseService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
@@ -18,6 +19,10 @@ class FirebaseService {
   static List<Producto>? _cacheProductos;
   static DateTime? _cacheTimestamp;
   static const Duration _duracionCache = Duration(minutes: 10);
+  static const List<String> _palabrasVacias = [
+    'de', 'la', 'el', 'los', 'las', 'un', 'una', 'para', 'que', 'se',
+    'y', 'o', 'con', 'sin', 'del', 'al', 'a',
+  ];
 
   bool get _cacheValida =>
       _cacheProductos != null &&
@@ -39,6 +44,8 @@ class FirebaseService {
     }
     return resultado;
   }
+
+
 
   // Genera las variantes de código a probar: el código real (físico/escaneado) no trae
   // la "A" que sirena.do usa como prefijo de PLU en la base de datos
@@ -139,12 +146,25 @@ class FirebaseService {
   }
 
   // Busca productos por nombre (para los de peso variable, sin código escaneable)
+  // Busca productos por nombre (para los de peso variable, sin código escaneable)
   Future<List<Producto>> buscarProductosPorNombre(String query) async {
     final queryNormalizada = _normalizar(query);
     final todos = await _obtenerTodosLosProductos();
-    return todos
-        .where((producto) => _normalizar(producto.nombre).contains(queryNormalizada))
+
+    if (queryNormalizada.trim().isEmpty) return todos;
+
+    // Divide la búsqueda en palabras sueltas y exige que TODAS aparezcan
+    // en el nombre del producto (en cualquier orden) — así "pan de viga"
+    // sí encuentra "Pan Blanco Wala Viga" aunque no sea substring exacto.
+    final palabras = queryNormalizada
+        .split(' ')
+        .where((p) => p.isNotEmpty && !_palabrasVacias.contains(p))
         .toList();
+
+    return todos.where((producto) {
+      final nombreNormalizado = _normalizar(producto.nombre);
+      return palabras.every((palabra) => nombreNormalizado.contains(palabra));
+    }).toList();
   }
 
   // Escucha en tiempo real el estado de las cajas de una sucursal
@@ -192,5 +212,14 @@ class FirebaseService {
     final raw = await obtenerGrafo(sucursalId);
     return raw.map((key, value) =>
         MapEntry(key as String, NodoGrafo.fromMap(key, value as Map<dynamic, dynamic>)));
+  }
+
+  // Guarda una valoración del chat de IA en Firebase (estadísticas para Grupo Ramos)
+  Future<void> guardarValoracionChat(Map<String, dynamic> datos) async {
+    try {
+      await _db.child('valoraciones_chat').push().set(datos);
+    } catch (e) {
+      print('Error guardando valoración de chat: $e');
+    }
   }
 }
