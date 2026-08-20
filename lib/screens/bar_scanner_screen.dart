@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../models/producto.dart';
 import '../utils/app_colors.dart';
-import '../widgets/menu_entrada_popup.dart';
+import '../widgets/main_menu_popup.dart';
 import 'variable_weight_dialog.dart';
 import 'home_screen.dart';
 
@@ -50,14 +50,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     }
   }
 
-  void _abrirMenuEntrada() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black54,
-      builder: (context) => const MenuEntradaPopup(),
-    );
-  }
+  // Se eliminó _abrirMenuPrincipal
 
   Future<void> _irAHome() async {
     if (_isCameraActive) {
@@ -156,15 +149,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   Widget _buildIntroView() {
     return Scaffold(
       backgroundColor: AppColors.blanco,
+      drawer: const MainMenuDrawer(),
       appBar: AppBar(
         backgroundColor: AppColors.amarilloSirena,
         elevation: 0,
         centerTitle: true,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: AppColors.azulSirena),
-          onPressed: _abrirMenuEntrada,
-        ),
         title: const Text(
           'ESCANER SIRENA',
           style: TextStyle(
@@ -328,6 +317,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
 
   Widget _buildCameraView() {
     return Scaffold(
+      drawer: const MainMenuDrawer(),
       appBar: AppBar(
         backgroundColor: AppColors.amarilloSirena,
         title: const Text(
@@ -344,9 +334,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           },
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: AppColors.azulSirena),
-            onPressed: _abrirMenuEntrada,
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu, color: AppColors.azulSirena),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.home, color: AppColors.azulSirena),

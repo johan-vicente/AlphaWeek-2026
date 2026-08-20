@@ -8,11 +8,13 @@ class ChatMessage {
   final bool esDeUsuario;
   final List<Producto>? productos;
   final bool mostrarBotonCarrito;
+  final String? imagePath;
 
   ChatMessage({
     required this.texto,
     required this.esDeUsuario,
     this.productos,
     this.mostrarBotonCarrito = false,
+    this.imagePath,
   });
 }

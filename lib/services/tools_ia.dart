@@ -38,6 +38,26 @@ class ToolsIA {
       },
     },
     {
+      'name': 'identificar_producto_por_imagen',
+      'description':
+      'Identifica un producto basándose en una imagen subida por el usuario '
+          'y lo busca en el catálogo real. Úsala SIEMPRE que el usuario suba '
+          'una foto para saber de qué producto se trata. Usa las palabras clave '
+          'más distintivas de la imagen.',
+      'input_schema': {
+        'type': 'object',
+        'properties': {
+          'descripcion_visual': {
+            'type': 'string',
+            'description':
+            'Descripción clara o nombre probable del producto que ves '
+                'en la foto (marca, tipo, presentación) para buscarlo en la base de datos.',
+          },
+        },
+        'required': ['descripcion_visual'],
+      },
+    },
+    {
       'name': 'consultar_disponibilidad_sucursal',
       'description':
       'Verifica si un producto específico está disponible en una '
@@ -123,6 +143,8 @@ class ToolsIA {
     switch (nombreTool) {
       case 'buscar_producto':
         return _buscarProducto(input);
+      case 'identificar_producto_por_imagen':
+        return _identificarProductoPorImagen(input);
       case 'consultar_disponibilidad_sucursal':
         return _consultarDisponibilidad(input);
       case 'armar_lista_por_presupuesto':
@@ -132,6 +154,27 @@ class ToolsIA {
       default:
         return {'error': 'Tool desconocida: $nombreTool'};
     }
+  }
+
+  static Future<Map<String, dynamic>> _identificarProductoPorImagen(
+      Map<String, dynamic> input,
+      ) async {
+    final descripcion = input['descripcion_visual'] as String? ?? '';
+    final resultados = await _firebaseService.buscarProductosPorNombre(descripcion);
+
+    if (resultados.isEmpty) {
+      return {
+        'encontrados': 0, 
+        'mensaje': 'No se encontró nada exacto en el catálogo parecido a: $descripcion'
+      };
+    }
+
+    ultimosProductosMostrados.addAll(resultados);
+
+    return {
+      'encontrados': resultados.length,
+      'productos': resultados.map(_productoParaIA).toList(),
+    };
   }
 
   static Future<Map<String, dynamic>> _buscarProducto(
@@ -192,6 +235,19 @@ class ToolsIA {
         seleccionados.add(p);
         acumulado += precio;
       }
+    }
+
+    if (seleccionados.isEmpty && candidatos.isNotEmpty) {
+      candidatos.sort((a, b) => a.calcularPrecio().compareTo(b.calcularPrecio()));
+      final masBarato = candidatos.first;
+      ultimosProductosMostrados.add(masBarato);
+      return {
+        'presupuesto_pedido': presupuesto,
+        'total_aproximado': masBarato.calcularPrecio(),
+        'mensaje': 'El presupuesto es demasiado bajo para armar una lista. El producto más económico disponible cuesta ${masBarato.calcularPrecio()} pesos.',
+        'mejor_aproximacion_mas_barata': _productoParaIA(masBarato),
+        'productos': [],
+      };
     }
 
     ultimosProductosMostrados.addAll(seleccionados);

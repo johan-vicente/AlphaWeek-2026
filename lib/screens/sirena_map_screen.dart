@@ -7,7 +7,7 @@ import '../services/cart_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/categoria_nodo_map.dart';
 import '../widgets/header_sirena.dart';
-import '../widgets/menu_entrada_popup.dart';
+import '../widgets/main_menu_popup.dart';
 import 'home_screen.dart';
 import 'cart_screen.dart';
 import 'bar_scanner_screen.dart';
@@ -309,14 +309,7 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
     );
   }
 
-  void _abrirMenuEntrada() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black54,
-      builder: (context) => const MenuEntradaPopup(),
-    );
-  }
+  // Se eliminó _abrirMenuPrincipal
 
   void _irAHome() {
     Navigator.of(context).pushAndRemoveUntil(
@@ -348,11 +341,11 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.blanco,
+      drawer: const MainMenuDrawer(),
       body: SafeArea(
         child: Column(
           children: [
             HeaderSirena(
-              onMenuTap: _abrirMenuEntrada,
               onLogoTap: _irAHome,
               onBarcodeTap: _irAEscaner,
               onCartTap: _irAlCarrito,

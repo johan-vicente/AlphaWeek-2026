@@ -6,7 +6,13 @@ const String _systemPromptChat =
     'Eres Sira, el asistente de compras de Sirena. Respondes siempre en '
     'español, de forma breve y amigable. IMPORTANTE: nunca uses formato '
     'markdown (nada de **negritas**, guiones de lista, ni encabezados) — '
-    'responde en texto plano simple, como si fuera un mensaje de chat normal.';
+    'responde en texto plano simple, como si fuera un mensaje de chat normal. '
+    'Si el usuario envía una imagen, analízala e identifica el producto. Usa '
+    'la tool identificar_producto_por_imagen para buscarlo en el catálogo. '
+    'Si la herramienta de búsqueda (ya sea por texto o por imagen) devuelve 0 resultados, '
+    'comunícale al usuario que no tenemos ese producto. NUNCA inventes productos, '
+    'marcas o precios que no estén en tu base de datos. Si la foto muestra algo que '
+    'no cuadra con un producto de supermercado o no se encuentra, dilo claramente sin falsos positivos.';
 
 /// Servicio base de comunicación con la API de Claude (Anthropic).
 /// Maneja el historial de la conversación activa y el resumen al cerrar.
@@ -40,15 +46,36 @@ class ClaudeService {
   /// Chat con tool use activo: ejecuta las tools que Claude pida y sigue
   /// el ciclo hasta que responda con texto final.
   Future<Map<String, dynamic>> enviarMensajeConTools(
-    String mensajeUsuario,
-  ) async {
+    String mensajeUsuario, {
+    String? base64Image,
+  }) async {
     if (_apiKey.isEmpty) {
       throw Exception(
         'CLAUDE_API_KEY vacía. Revisa el --dart-define en la Run Configuration.',
       );
     }
 
-    _historial.add({'role': 'user', 'content': mensajeUsuario});
+    if (base64Image != null && base64Image.isNotEmpty) {
+      _historial.add({
+        'role': 'user',
+        'content': [
+          {
+            "type": "image",
+            "source": {
+              "type": "base64",
+              "media_type": "image/jpeg",
+              "data": base64Image
+            }
+          },
+          {
+            "type": "text",
+            "text": mensajeUsuario
+          }
+        ]
+      });
+    } else {
+      _historial.add({'role': 'user', 'content': mensajeUsuario});
+    }
 
     Map<String, dynamic> data = await _llamarAPI(tools: ToolsIA.definiciones);
 

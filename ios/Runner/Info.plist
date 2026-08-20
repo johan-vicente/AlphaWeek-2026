@@ -4,6 +4,10 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Necesario para dictar mensajes con voz.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Necesario para capturar audio durante el dictado.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

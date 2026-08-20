@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
 import '../utils/app_colors.dart';
-import '../widgets/menu_entrada_popup.dart';
+import '../widgets/main_menu_popup.dart';
 import 'sirena_map_screen.dart';
 import 'home_screen.dart';
+import 'chat_ia_screen.dart';
 import '../widgets/seleccionar_sucursal_popup.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  void _abrirMenuEntrada(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black54,
-      builder: (context) => const MenuEntradaPopup(),
-    );
-  }
+  // Se eliminó _abrirMenuPrincipal
 
   void _irAHome(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
@@ -37,25 +31,40 @@ class CartScreen extends StatelessWidget {
         ),
         backgroundColor: AppColors.amarilloSirena,
         iconTheme: const IconThemeData(color: AppColors.negro),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: AppColors.azulSirena),
-            onPressed: () => _abrirMenuEntrada(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.home, color: AppColors.azulSirena),
-            onPressed: () => _irAHome(context),
-          ),
-        ],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.azulSirena),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: AnimatedBuilder(
         animation: cartService,
         builder: (context, child) {
           if (cartService.items.isEmpty) {
-            return const Center(
-              child: Text(
-                'Tu carrito está vacío',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Tu carrito está vacío',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.amarilloSirena),
+                    icon: const Icon(Icons.add_shopping_cart, color: AppColors.azulSirena),
+                    label: const Text('Agregar productos', style: TextStyle(color: AppColors.azulSirena, fontWeight: FontWeight.bold)),
+                    onPressed: () => _irAHome(context),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.azulSirena),
+                    icon: const Icon(Icons.chat, color: AppColors.blanco),
+                    label: const Text('Hablar con asistente', style: TextStyle(color: AppColors.blanco, fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatIAScreen()));
+                    },
+                  ),
+                ],
               ),
             );
           }
