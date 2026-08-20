@@ -1,13 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/nodo_grafo.dart';
 import '../models/producto.dart';
+import '../models/promocion.dart';
 import '../services/firebase_service.dart';
 import '../services/ruta_service.dart';
 import '../services/cart_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/categoria_nodo_map.dart';
+import '../utils/anuncio_pasillo_map.dart';
 import '../widgets/header_sirena.dart';
-import '../widgets/menu_entrada_popup.dart';
+import '../widgets/main_menu_popup.dart';
+import '../widgets/anuncio_popup.dart';
 import 'home_screen.dart';
 import 'cart_screen.dart';
 import 'bar_scanner_screen.dart';
@@ -47,6 +51,9 @@ const double _limiteColumnaDerecha = 0.85;
 const double _desplazamientoColumnaDerecha = 0.04;
 // ---------------------------------------------------------------------
 
+// Altura del banner de anuncio contextual que se desliza desde arriba.
+const double _alturaAnuncioContextual =100.0;
+
 class SirenaMapScreen extends StatefulWidget {
   final String sucursalId;
   final bool preguntarPorCarritoAlEntrar;
@@ -80,6 +87,10 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
 
   Map<dynamic, dynamic> _cajas = {};
 
+  Promocion? _anuncioContextual;
+  bool _mostrarAnuncioContextual = false;
+  Timer? _timerAnuncioContextual;
+
   bool get _hayRutaCalculada => _rutaActual.isNotEmpty;
 
   double get _aspectRatioMapa =>
@@ -101,6 +112,7 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
   @override
   void dispose() {
     _busquedaController.dispose();
+    _timerAnuncioContextual?.cancel();
     super.dispose();
   }
 
@@ -211,6 +223,7 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
       _esperandoOrigenManual = false;
       _mostrarBuscador = false;
     });
+    _revisarAnuncioContextual();
   }
 
   List<String> _ordenarDestinosSegunRuta(List<String> ruta, Set<String> destinos) {
@@ -254,6 +267,38 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
       _busquedaController.clear();
       _resultadosBusqueda = [];
     });
+    _revisarAnuncioContextual();
+  }
+
+  /// Revisa si la ruta recién calculada pasa por algún pasillo/zona con
+  /// anuncio contextual asociado, y si es así, lo muestra 3 segundos.
+  void _revisarAnuncioContextual() {
+    for (final id in _rutaActual) {
+      final promo = AnuncioPasilloMap.mapa[id];
+      if (promo != null) {
+        _dispararAnuncioContextual(promo);
+        return;
+      }
+    }
+  }
+
+  void _dispararAnuncioContextual(Promocion promo) {
+    _timerAnuncioContextual?.cancel();
+    setState(() {
+      _anuncioContextual = promo;
+      _mostrarAnuncioContextual = true;
+    });
+    _timerAnuncioContextual = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _mostrarAnuncioContextual = false);
+    });
+  }
+
+  void _abrirAnuncios() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (_) => const AnuncioPopup(),
+    );
   }
 
   Future<void> _buscarProducto(String query) async {
@@ -309,15 +354,6 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
     );
   }
 
-  void _abrirMenuEntrada() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black54,
-      builder: (context) => const MenuEntradaPopup(),
-    );
-  }
-
   void _irAHome() {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -348,39 +384,69 @@ class _SirenaMapScreenState extends State<SirenaMapScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.blanco,
+      drawer: const MainMenuDrawer(),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            HeaderSirena(
-              onMenuTap: _abrirMenuEntrada,
-              onLogoTap: _irAHome,
-              onBarcodeTap: _irAEscaner,
-              onCartTap: _irAlCarrito,
-              onSearchChanged: (_) {},
-              mostrarSirenaMas: false,
-            ),
-            Container(
-              width: double.infinity,
-              color: AppColors.azulSirena,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Sirena $nombreCorto',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.blanco,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+            Column(
+              children: [
+                HeaderSirena(
+                  onLogoTap: _irAHome,
+                  onBarcodeTap: _irAEscaner,
+                  onCartTap: _irAlCarrito,
+                  onSearchChanged: (_) {},
+                  onAnuncioTap: _abrirAnuncios,
+                  mostrarSirenaMas: false,
                 ),
-              ),
+                Container(
+                  width: double.infinity,
+                  color: AppColors.azulSirena,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Sirena $nombreCorto',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.blanco,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _cargandoGrafo
+                      ? const Center(child: CircularProgressIndicator(color: AppColors.azulSirena))
+                      : (_nodos.isEmpty ? _construirAvisoGrafoVacio() : _construirMapa()),
+                ),
+                _construirBarraEstado(),
+                _construirBotonCarrito(),
+              ],
             ),
-            Expanded(
-              child: _cargandoGrafo
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.azulSirena))
-                  : (_nodos.isEmpty ? _construirAvisoGrafoVacio() : _construirMapa()),
-            ),
-            _construirBarraEstado(),
-            _construirBotonCarrito(),
+            _construirAnuncioContextual(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Banner deslizante de anuncio contextual — aparece arriba de todo,
+  /// solo 3 segundos, con transición suave de arriba hacia abajo y de
+  /// vuelta hacia arriba (no invasivo).
+  Widget _construirAnuncioContextual() {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+      top: _mostrarAnuncioContextual ? 12 : -300,
+      left: 24,
+      right: 24,
+      child: _anuncioContextual == null
+          ? const SizedBox.shrink()
+          : Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: AspectRatio(
+          aspectRatio: 950 / 522,
+          child: Image.asset(_anuncioContextual!.imagenAsset, fit: BoxFit.contain),
         ),
       ),
     );

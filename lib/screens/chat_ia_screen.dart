@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
 import '../models/producto.dart';
+import '../models/promocion.dart';
 import '../services/claude_service.dart';
 import '../services/tools_ia.dart';
 import '../services/local_storage_service.dart';
@@ -10,6 +11,11 @@ import '../utils/app_colors.dart';
 import '../widgets/valoracion_chat_popup.dart';
 import 'product_result_screen.dart';
 import 'cart_screen.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ChatIAScreen extends StatefulWidget {
   const ChatIAScreen({super.key});
@@ -30,9 +36,80 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   bool _cargando = false;
   bool _modoOscuro = false;
 
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  bool _isListening = false;
+  String _textoPrevio = '';
+
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize(
+      onError: (val) => print('onError: $val'),
+      onStatus: (val) {
+        if (val == 'done' || val == 'notListening') {
+          if (mounted) {
+            setState(() {
+              _isListening = false;
+            });
+          }
+        }
+      },
+    );
+    if (mounted) setState(() {});
+  }
+
+  void _iniciarEscucha() async {
+    if (_speechEnabled) {
+      _textoPrevio = _inputController.text;
+      await _speechToText.listen(
+        onResult: (result) {
+          setState(() {
+            _inputController.text = _textoPrevio.isEmpty
+                ? result.recognizedWords
+                : '$_textoPrevio ${result.recognizedWords}';
+            _inputController.selection = TextSelection.fromPosition(
+                TextPosition(offset: _inputController.text.length));
+          });
+        },
+      );
+      setState(() {
+        _isListening = true;
+      });
+    } else {
+      _initSpeech();
+    }
+  }
+
+  void _detenerEscucha() async {
+    await _speechToText.stop();
+    setState(() {
+      _isListening = false;
+    });
+  }
+
   Future<void> _enviarMensaje([String? textoForzado]) async {
+    if (_isListening) _detenerEscucha();
     final texto = (textoForzado ?? _inputController.text).trim();
     if (texto.isEmpty || _cargando) return;
+
+    final conectividad = await Connectivity().checkConnectivity();
+    if (conectividad.contains(ConnectivityResult.none)) {
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: 'No tienes conexión a internet. Revisa tu red y vuelve a intentar.',
+          esDeUsuario: false,
+        ));
+      });
+      _scrollAlFinal();
+      return;
+    }
 
     if (_mensajesEnviadosSesion >= _maxMensajesPorSesion) {
       setState(() {
@@ -62,9 +139,123 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
 
     ToolsIA.ultimosProductosMostrados = [];
     ToolsIA.seAgregoAlCarrito = false;
+    ToolsIA.ultimasPromosMostradas = [];
 
     try {
       final resp = await ClaudeService().enviarMensajeConTools(texto);
+      final textoRespuesta = ClaudeService().extraerTexto(resp);
+      final productos = List<Producto>.from(ToolsIA.ultimosProductosMostrados);
+      final promos = List<Promocion>.from(ToolsIA.ultimasPromosMostradas);
+
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: textoRespuesta,
+          esDeUsuario: false,
+          productos: productos.isNotEmpty ? productos : null,
+          mostrarBotonCarrito: ToolsIA.seAgregoAlCarrito,
+          imagenesPromo:
+          promos.isNotEmpty ? promos.map((p) => p.imagenAsset).toList() : null,
+        ));
+        _cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: 'Hubo un problema conectando con el asistente. Intenta de nuevo.',
+          esDeUsuario: false,
+        ));
+        _cargando = false;
+      });
+    }
+    _scrollAlFinal();
+  }
+
+  Future<void> _tomarFoto() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Tomar foto'),
+              onTap: () {
+                Navigator.pop(context);
+                _procesarImagen(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Elegir de galería'),
+              onTap: () {
+                Navigator.pop(context);
+                _procesarImagen(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _procesarImagen(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 70,
+    );
+    if (image == null) return;
+
+    setState(() {
+      _cargando = true;
+      _mensajes.add(ChatMessage(
+        texto: 'Enviando imagen...',
+        esDeUsuario: true,
+        imagePath: image.path,
+      ));
+    });
+    _scrollAlFinal();
+
+    try {
+      final bytes = await image.readAsBytes();
+      final base64String = base64Encode(bytes);
+      await _enviarImagenClaude(base64String);
+    } catch (e) {
+      setState(() {
+        _cargando = false;
+        _mensajes.add(ChatMessage(
+          texto: 'Error procesando la imagen.',
+          esDeUsuario: false,
+        ));
+      });
+      _scrollAlFinal();
+    }
+  }
+
+  Future<void> _enviarImagenClaude(String base64String) async {
+    final conectividad = await Connectivity().checkConnectivity();
+    if (conectividad.contains(ConnectivityResult.none)) {
+      setState(() {
+        _mensajes.add(ChatMessage(
+          texto: 'No tienes conexión a internet para analizar la foto. Revisa tu red.',
+          esDeUsuario: false,
+        ));
+        _cargando = false;
+      });
+      _scrollAlFinal();
+      return;
+    }
+
+    ToolsIA.ultimosProductosMostrados = [];
+    ToolsIA.seAgregoAlCarrito = false;
+    ToolsIA.ultimasPromosMostradas = [];
+
+    try {
+      final resp = await ClaudeService().enviarMensajeConTools(
+        'Analiza esta imagen e identifica el producto. Usa identificar_producto_por_imagen para buscarlo en el catálogo.',
+        base64Image: base64String,
+      );
       final textoRespuesta = ClaudeService().extraerTexto(resp);
       final productos = List<Producto>.from(ToolsIA.ultimosProductosMostrados);
 
@@ -150,13 +341,13 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
         elevation: 1,
         iconTheme: const IconThemeData(color: AppColors.negro),
         title: const Text(
-          'Sira, tu IA zerca de ti',
+          'Sira',
           style: TextStyle(color: AppColors.negro, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Finalizar sesión',
+            icon: const Icon(Icons.star),
+            tooltip: 'Valorar al agente',
             onPressed: _cerrarChat,
           ),
           IconButton(
@@ -217,6 +408,22 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       crossAxisAlignment:
       esUsuario ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
+        if (mensaje.imagePath != null)
+          Align(
+            alignment: esUsuario ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 4, top: 4),
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                image: DecorationImage(
+                  image: FileImage(File(mensaje.imagePath!)),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
         Align(
           alignment: esUsuario ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
@@ -244,6 +451,16 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
         ),
         if (mensaje.productos != null && mensaje.productos!.isNotEmpty)
           ...mensaje.productos!.map((p) => _buildTarjetaProducto(p)),
+        if (mensaje.imagenesPromo != null && mensaje.imagenesPromo!.isNotEmpty)
+          ...mensaje.imagenesPromo!.map((ruta) => Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+            child: AspectRatio(
+              aspectRatio: 950 / 522,
+              child: Image.asset(ruta, fit: BoxFit.cover),
+            ),
+          )),
         if (mensaje.mostrarBotonCarrito)
           Padding(
             padding: const EdgeInsets.only(top: 4),
@@ -367,25 +584,56 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       ),
       child: SafeArea(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end, // ← los íconos quedan abajo mientras el campo crece hacia arriba
           children: [
             Expanded(
-              child: TextField(
-                controller: _inputController,
-                style: TextStyle(color: _modoOscuro ? AppColors.blanco : AppColors.negro),
-                decoration: InputDecoration(
-                  hintText: 'Escribe tu mensaje...',
-                  hintStyle: TextStyle(
-                    color: _modoOscuro ? Colors.grey.shade500 : Colors.grey.shade600,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 120), // ← límite de crecimiento
+                child: SingleChildScrollView(
+                  reverse: true, // ← siempre muestra el final del texto (donde escribes) cuando hace scroll interno
+                  child: TextField(
+                    controller: _inputController,
+                    minLines: 1,
+                    maxLines: null, // ← permite crecer verticalmente sin límite propio (lo limita el ConstrainedBox de afuera)
+                    keyboardType: TextInputType.multiline,
+                    style: TextStyle(color: _modoOscuro ? AppColors.blanco : AppColors.negro),
+                    decoration: InputDecoration(
+                      hintText: 'Escribe tu mensaje...',
+                      hintStyle: TextStyle(
+                        color: _modoOscuro ? Colors.grey.shade500 : Colors.grey.shade600,
+                      ),
+                      filled: true,
+                      fillColor: _modoOscuro ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    ),
                   ),
-                  filled: true,
-                  fillColor: _modoOscuro ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
-                onSubmitted: (_) => _enviarMensaje(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: AppColors.amarilloSirena,
+              child: IconButton(
+                icon: const Icon(Icons.camera_alt, color: AppColors.azulSirena, size: 20),
+                onPressed: () => _tomarFoto(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: _isListening ? Colors.redAccent : AppColors.amarilloSirena,
+              child: IconButton(
+                icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: AppColors.azulSirena, size: 20),
+                onPressed: () {
+                  if (_isListening) {
+                    _detenerEscucha();
+                  } else {
+                    _iniciarEscucha();
+                  }
+                },
               ),
             ),
             const SizedBox(width: 8),

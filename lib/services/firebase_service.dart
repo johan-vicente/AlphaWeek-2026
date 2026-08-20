@@ -222,4 +222,25 @@ class FirebaseService {
       print('Error guardando valoración de chat: $e');
     }
   }
+
+  // Busca productos por categoría exacta (para "ver productos relacionados" de un anuncio)
+  Future<List<Producto>> buscarProductosPorCategoria(String categoria) async {
+    final todos = await _obtenerTodosLosProductos();
+    final categoriaNormalizada = _normalizar(categoria);
+    return todos
+        .where((p) => _normalizar(p.categoria) == categoriaNormalizada)
+        .toList();
+  }
+
+  // Guarda una queja/sugerencia del cliente
+  Future<void> guardarQuejaSugerencia(String texto) async {
+    try {
+      await _db.child('quejas_sugerencias').push().set({
+        'texto': texto,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('Error guardando queja/sugerencia: $e');
+    }
+  }
 }

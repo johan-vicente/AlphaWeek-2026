@@ -10,9 +10,8 @@ class ProductoCard extends StatelessWidget {
   const ProductoCard({super.key, required this.producto, required this.onTap});
 
   /// Busca el CartItem de este producto en el carrito (por código de barra).
-  /// Para peso_variable puede haber varias entradas distintas del mismo
-  /// producto (cada pesada es su propio ítem) — aquí solo se usa para
-  /// productos empacados, que sí se agrupan en un único ítem.
+  /// Ahora también agrupa peso_variable, ya que addItem acumula libras en
+  /// el mismo ítem en vez de crear uno nuevo por cada toque.
   CartItem? _buscarItemEnCarrito() {
     for (final item in CartService().items) {
       if (item.producto.codigoBarra == producto.codigoBarra) return item;
@@ -95,10 +94,10 @@ class ProductoCard extends StatelessWidget {
 
 /// El botón flotante en la esquina de la tarjeta: un "+" solo mientras el
 /// producto no está en el carrito, y la fila "- cantidad +" en cuanto se
-/// agrega (productos empacados). Para peso_variable siempre se queda como
-/// un "+" simple, porque cada toque agrega una pesada nueva por separado.
-/// Escucha CartService directo (AnimatedBuilder) para reflejar cambios sin
-/// que HomeScreen tenga que manejar ese estado.
+/// agrega — tanto para empacados (cantidad de unidades) como para peso
+/// variable (libras acumuladas). Escucha CartService directo
+/// (AnimatedBuilder) para reflejar cambios sin que HomeScreen tenga que
+/// manejar ese estado.
 class _BotonCantidad extends StatelessWidget {
   final Producto producto;
   final CartItem? Function() buscarItem;
@@ -116,7 +115,7 @@ class _BotonCantidad extends StatelessWidget {
       animation: CartService(),
       builder: (context, _) {
         final esPesoVariable = producto.tipoVenta == 'peso_variable';
-        final item = esPesoVariable ? null : buscarItem();
+        final item = buscarItem();
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -134,17 +133,21 @@ class _BotonCantidad extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               GestureDetector(
-                onTap: () => CartService().updateQuantity(item, -1),
+                onTap: () => esPesoVariable
+                    ? CartService().actualizarLibras(item, -1)
+                    : CartService().updateQuantity(item, -1),
                 child: const Icon(Icons.remove_circle_outline, color: AppColors.azulSirena, size: 18),
               ),
               const SizedBox(width: 4),
               Text(
-                '${item.cantidad}',
+                esPesoVariable ? '${item.libras.toStringAsFixed(0)}' : '${item.cantidad}',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 4),
               GestureDetector(
-                onTap: () => CartService().updateQuantity(item, 1),
+                onTap: () => esPesoVariable
+                    ? CartService().actualizarLibras(item, 1)
+                    : CartService().updateQuantity(item, 1),
                 child: const Icon(Icons.add_circle_outline, color: AppColors.azulSirena, size: 18),
               ),
             ],

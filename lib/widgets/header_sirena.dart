@@ -9,6 +9,8 @@ class HeaderSirena extends StatelessWidget {
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onSirenaMasTap;
   final VoidCallback? onLogoTap;
+  final VoidCallback? onAnuncioTap;
+  final bool mostrarFlechaAtras;
 
   /// Si es false, no dibuja la franja amarilla inferior de "SirenaMás".
   /// Por defecto true (comportamiento igual que antes en el resto de la app).
@@ -22,7 +24,9 @@ class HeaderSirena extends StatelessWidget {
     this.onSearchChanged,
     this.onSirenaMasTap,
     this.onLogoTap,
+    this.onAnuncioTap,
     this.mostrarSirenaMas = true,
+    this.mostrarFlechaAtras = false,
   });
 
   @override
@@ -31,27 +35,30 @@ class HeaderSirena extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Franja amarilla superior
-        Container(
-          width: double.infinity,
-          color: AppColors.amarilloSirena,
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Flexible(
-                child: Text(
-                  '¡Especiales del Día que no te puedes perder!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.azulSirena,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+        GestureDetector(
+          onTap: onAnuncioTap,
+          child: Container(
+            width: double.infinity,
+            color: AppColors.amarilloSirena,
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Flexible(
+                  child: Text(
+                    '¡Especiales del Día que no te puedes perder!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.azulSirena,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(width: 4),
-              Icon(Icons.keyboard_arrow_down, color: AppColors.azulSirena, size: 18),
-            ],
+                SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_down, color: AppColors.azulSirena, size: 18),
+              ],
+            ),
           ),
         ),
         // Franja blanca del medio
@@ -61,7 +68,10 @@ class HeaderSirena extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           child: Row(
             children: [
-              IconButton(icon: const Icon(Icons.menu, color: AppColors.azulSirena), onPressed: onMenuTap),
+              IconButton(
+                icon: const Icon(Icons.menu, color: AppColors.azulSirena),
+                onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
+              ),
               GestureDetector(
                 onTap: onLogoTap,
                 child: SvgPicture.asset('assets/branding/logo_sirena.svg', height: 26),
@@ -81,7 +91,7 @@ class HeaderSirena extends StatelessWidget {
                           onChanged: onSearchChanged,
                           decoration: const InputDecoration(
                             hintText: 'Buscar en Sirena',
-                            hintStyle: TextStyle(color: Colors.grey),
+                            hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
                             border: InputBorder.none,
                             isCollapsed: true,
                             contentPadding: EdgeInsets.only(left: 12),
@@ -112,33 +122,48 @@ class HeaderSirena extends StatelessWidget {
             ],
           ),
         ),
-        // Franja amarilla inferior — logo + SirenaMás (opcional)
+        // Franja amarilla inferior — logo + SirenaMás (opcional) + flecha atrás (opcional)
         if (mostrarSirenaMas)
-          InkWell(
-            onTap: onSirenaMasTap,
-            child: Container(
-              width: double.infinity,
-              color: AppColors.amarilloSirena,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset('assets/branding/logo_sirena.svg', height: 20),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'SirenaMás',
-                    style: TextStyle(
-                      color: AppColors.cianSirenaMas,
-                      fontWeight: FontWeight.bold,
-                      fontStyle: FontStyle.italic,
-                      fontSize: 16,
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              InkWell(
+                onTap: onSirenaMasTap,
+                child: Container(
+                  width: double.infinity,
+                  color: AppColors.amarilloSirena,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset('assets/branding/logo_sirena.svg', height: 20),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'SirenaMás',
+                        style: TextStyle(
+                          color: AppColors.cianSirenaMas,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.italic,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.chevron_right, color: AppColors.cianSirenaMas, size: 20),
+                    ],
+                  ),
+                ),
+              ),
+              if (mostrarFlechaAtras)
+                Positioned(
+                  left: 8,
+                  child: Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.arrow_back, color: AppColors.negro),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right, color: AppColors.cianSirenaMas, size: 20),
-                ],
-              ),
-            ),
+                ),
+            ],
           ),
       ],
     );

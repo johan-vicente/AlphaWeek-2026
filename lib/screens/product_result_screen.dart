@@ -9,7 +9,7 @@ import 'cart_screen.dart';
 import '../utils/app_colors.dart';
 import '../widgets/header_sirena.dart';
 import 'home_screen.dart';
-import '../widgets/menu_entrada_popup.dart';
+import '../widgets/main_menu_popup.dart';
 
 class ProductResultScreen extends StatefulWidget {
   final String barcode;
@@ -65,22 +65,16 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
       builder: (context, child) {
         return Scaffold(
           backgroundColor: AppColors.blanco,
+          drawer: const MainMenuDrawer(),
           body: SafeArea(
             child: Column(
               children: [
                 HeaderSirena(
+                  mostrarFlechaAtras: true,
                   onLogoTap: () {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (context) => const HomeScreen()),
                           (route) => false,
-                    );
-                  },
-                  onMenuTap: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      barrierColor: Colors.black54,
-                      builder: (context) => const MenuEntradaPopup(),
                     );
                   },
                   onBarcodeTap: () => Navigator.pop(context),

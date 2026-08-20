@@ -1,21 +1,29 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/cart_service.dart';
 import '../utils/app_colors.dart';
-import '../widgets/menu_entrada_popup.dart';
+import '../widgets/main_menu_popup.dart';
 import 'sirena_map_screen.dart';
 import 'home_screen.dart';
+import 'chat_ia_screen.dart';
 import '../widgets/seleccionar_sucursal_popup.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
-  void _abrirMenuEntrada(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black54,
-      builder: (context) => const MenuEntradaPopup(),
-    );
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  bool _copiado = false;
+  Timer? _timerCopiado;
+
+  @override
+  void dispose() {
+    _timerCopiado?.cancel();
+    super.dispose();
   }
 
   void _irAHome(BuildContext context) {
@@ -23,6 +31,59 @@ class CartScreen extends StatelessWidget {
       MaterialPageRoute(builder: (context) => const HomeScreen()),
           (route) => false,
     );
+  }
+
+  String _emojiParaCategoria(String categoria) {
+    final cat = categoria.toLowerCase();
+    if (cat.contains('limpieza') || cat.contains('desechables')) return '🧼';
+    if (cat.contains('frutas') || cat.contains('vegetales') || cat.contains('víveres') || cat.contains('viveres')) return '🥦';
+    if (cat.contains('lácteos') || cat.contains('lacteos') || cat.contains('huevos')) return '🥛';
+    if (cat.contains('panadería') || cat.contains('panaderia')) return '🍞';
+    if (cat.contains('galletas') || cat.contains('dulces') || cat.contains('chocolates')) return '🍪';
+    if (cat.contains('pollo')) return '🍗';
+    if (cat.contains('cerdo')) return '🥩';
+    if (cat.contains('carnes') || cat.contains('res')) return '🥩';
+    if (cat.contains('bebidas')) return '🥤';
+    if (cat.contains('quesos') || cat.contains('embutidos')) return '🧀';
+    if (cat.contains('bebé') || cat.contains('bebe')) return '👶';
+    if (cat.contains('vinos') || cat.contains('cervezas')) return '🍺';
+    if (cat.contains('especias') || cat.contains('condimentos')) return '🧂';
+    if (cat.contains('despensa')) return '🥫';
+    return '🛍️';
+  }
+
+  void _copiarCarrito(BuildContext context, CartService cartService) {
+    if (cartService.items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tu carrito está vacío, no hay nada que copiar')),
+      );
+      return;
+    }
+
+    final buffer = StringBuffer();
+    buffer.writeln('🛒 *Mi lista de compras - Sirena*');
+    buffer.writeln('');
+
+    for (final item in cartService.items) {
+      final emoji = _emojiParaCategoria(item.producto.categoria);
+      final detalle = item.producto.tipoVenta == 'peso_variable'
+          ? '${item.libras.toStringAsFixed(2)} lb'
+          : '${item.cantidad} und';
+      buffer.writeln(
+        '$emoji ${item.producto.nombre} — $detalle — \$${item.subtotal.toStringAsFixed(2)}',
+      );
+    }
+
+    buffer.writeln('');
+    buffer.writeln('*Total: \$${cartService.total.toStringAsFixed(2)}*');
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+
+    _timerCopiado?.cancel();
+    setState(() => _copiado = true);
+    _timerCopiado = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _copiado = false);
+    });
   }
 
   @override
@@ -37,14 +98,32 @@ class CartScreen extends StatelessWidget {
         ),
         backgroundColor: AppColors.amarilloSirena,
         iconTheme: const IconThemeData(color: AppColors.negro),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.azulSirena),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: AppColors.azulSirena),
-            onPressed: () => _abrirMenuEntrada(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.home, color: AppColors.azulSirena),
-            onPressed: () => _irAHome(context),
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.azulSirena,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+                icon: Icon(
+                  _copiado ? Icons.check : Icons.copy,
+                  color: AppColors.blanco,
+                  size: 16,
+                ),
+                label: Text(
+                  _copiado ? '¡Copiado!' : 'Copiar carrito',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.blanco),
+                ),
+                onPressed: () => _copiarCarrito(context, cartService),
+              ),
+            ),
           ),
         ],
       ),
@@ -52,10 +131,31 @@ class CartScreen extends StatelessWidget {
         animation: cartService,
         builder: (context, child) {
           if (cartService.items.isEmpty) {
-            return const Center(
-              child: Text(
-                'Tu carrito está vacío',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Tu carrito está vacío',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.amarilloSirena),
+                    icon: const Icon(Icons.add_shopping_cart, color: AppColors.azulSirena),
+                    label: const Text('Agregar productos', style: TextStyle(color: AppColors.azulSirena, fontWeight: FontWeight.bold)),
+                    onPressed: () => _irAHome(context),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.azulSirena),
+                    icon: const Icon(Icons.chat, color: AppColors.blanco),
+                    label: const Text('Hablar con Asistente Sira', style: TextStyle(color: AppColors.blanco, fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatIAScreen()));
+                    },
+                  ),
+                ],
               ),
             );
           }
@@ -146,20 +246,24 @@ class CartScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    if (!esVariable)
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline),
-                        color: AppColors.azulSirena,
-                        onPressed: () => cartService.updateQuantity(item, -1),
-                      ),
-                    if (!esVariable)
-                      Text('${item.cantidad}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    if (!esVariable)
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline),
-                        color: AppColors.azulSirena,
-                        onPressed: () => cartService.updateQuantity(item, 1),
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      color: AppColors.azulSirena,
+                      onPressed: () => esVariable
+                          ? cartService.actualizarLibras(item, -1)
+                          : cartService.updateQuantity(item, -1),
+                    ),
+                    Text(
+                      esVariable ? item.libras.toStringAsFixed(0) : '${item.cantidad}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      color: AppColors.azulSirena,
+                      onPressed: () => esVariable
+                          ? cartService.actualizarLibras(item, 1)
+                          : cartService.updateQuantity(item, 1),
+                    ),
                   ],
                 ),
                 IconButton(

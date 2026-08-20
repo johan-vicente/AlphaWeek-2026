@@ -35,12 +35,16 @@ dependencies:
   firebase_database: ^11.1.4
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  google_fonts: ^6.1.0
   connectivity_plus: ^6.1.0
   flutter_svg: ^2.3.0
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   http: ^1.2.2
+  speech_to_text: ^7.4.0
+  permission_handler: ^11.3.1
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +68,7 @@ flutter:
     - assets/data/
     - assets/branding/
     - assets/mapas_preview/
+    - assets/promociones/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -80,22 +85,7 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+  fonts:
+    - family: OpenDyslexic
+      fonts:
+        - asset: assets/fonts/OpenDyslexic-Regular.ttf
