@@ -47,9 +47,18 @@ class CartService extends ChangeNotifier {
         notifyListeners();
         return;
       }
+    } else {
+      // Peso variable: agrupar libras si ya existe el mismo producto,
+      // en vez de crear una entrada nueva por cada toque de "+".
+      final index = _items.indexWhere((item) => item.producto.codigoBarra == producto.codigoBarra);
+      if (index != -1) {
+        _items[index].libras += libras;
+        notifyListeners();
+        return;
+      }
     }
-    
-    // Si no existe, o es peso variable, se añade un nuevo ítem
+
+    // Si no existe todavía, se añade un nuevo ítem
     _items.add(
       CartItem(
         producto: producto,
@@ -86,6 +95,20 @@ class CartService extends ChangeNotifier {
       removeItem(item);
     } else {
       item.cantidad = newQuantity;
+      notifyListeners();
+    }
+  }
+
+  /// Equivalente a updateQuantity, pero para productos de peso variable —
+  /// suma/resta 1 libra completa por toque, y remueve el ítem si llega a 0.
+  void actualizarLibras(CartItem item, double delta) {
+    if (item.producto.tipoVenta != 'peso_variable') return;
+
+    final nuevasLibras = item.libras + delta;
+    if (nuevasLibras <= 0) {
+      removeItem(item);
+    } else {
+      item.libras = nuevasLibras;
       notifyListeners();
     }
   }

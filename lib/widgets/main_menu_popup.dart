@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import 'menu_entrada_popup.dart';
 import 'accessibility_panel.dart';
+import 'queja_sugerencia_popup.dart';
 
 class MainMenuDrawer extends StatelessWidget {
   const MainMenuDrawer({super.key});
@@ -74,6 +75,21 @@ class MainMenuDrawer extends StatelessWidget {
                           ),
                           child: const AccessibilityPanel(),
                         ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.feedback_outlined, color: AppColors.azulSirena),
+                    title: const Text('Quejas y sugerencias', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Cuéntanos tu experiencia'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      showDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        barrierColor: Colors.black54,
+                        builder: (context) => const QuejaSugerenciaPopup(),
                       );
                     },
                   ),

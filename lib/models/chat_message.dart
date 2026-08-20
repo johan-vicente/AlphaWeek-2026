@@ -9,6 +9,7 @@ class ChatMessage {
   final List<Producto>? productos;
   final bool mostrarBotonCarrito;
   final String? imagePath;
+  final List<String>? imagenesPromo;
 
   ChatMessage({
     required this.texto,
@@ -16,5 +17,6 @@ class ChatMessage {
     this.productos,
     this.mostrarBotonCarrito = false,
     this.imagePath,
+    this.imagenesPromo,
   });
 }

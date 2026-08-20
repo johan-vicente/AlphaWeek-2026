@@ -70,6 +70,7 @@ class _ProductResultScreenState extends State<ProductResultScreen> {
             child: Column(
               children: [
                 HeaderSirena(
+                  mostrarFlechaAtras: true,
                   onLogoTap: () {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (context) => const HomeScreen()),

@@ -5,6 +5,7 @@ import '../services/firebase_service.dart';
 import '../widgets/header_sirena.dart';
 import '../widgets/producto_card.dart';
 import '../widgets/main_menu_popup.dart';
+import '../widgets/anuncio_popup.dart';
 import '../utils/app_colors.dart';
 import 'product_result_screen.dart';
 import 'bar_scanner_screen.dart';
@@ -48,7 +49,13 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Se eliminó _abrirMenuPrincipal
+  void _abrirAnuncios() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (_) => const AnuncioPopup(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             HeaderSirena(
+              onAnuncioTap: _abrirAnuncios,
               onBarcodeTap: () async {
                 final codigoEscaneado = await Navigator.push<String>(
                   context,

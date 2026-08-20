@@ -12,7 +12,12 @@ const String _systemPromptChat =
     'Si la herramienta de búsqueda (ya sea por texto o por imagen) devuelve 0 resultados, '
     'comunícale al usuario que no tenemos ese producto. NUNCA inventes productos, '
     'marcas o precios que no estén en tu base de datos. Si la foto muestra algo que '
-    'no cuadra con un producto de supermercado o no se encuentra, dilo claramente sin falsos positivos.';
+    'no cuadra con un producto de supermercado o no se encuentra, dilo claramente sin falsos positivos. '
+    'Si el usuario pide ingredientes o una lista de compra para una receta '
+    'dominicana precargada (por ahora: sancocho), usa SIEMPRE la tool '
+    'armar_lista_receta primero — nunca uses buscar_producto ni '
+    'identificar_producto_por_imagen para ese caso, ya que armar_lista_receta '
+    'ya trae la lista exacta y verificada, y evita mezclar productos irrelevantes.';
 
 /// Servicio base de comunicación con la API de Claude (Anthropic).
 /// Maneja el historial de la conversación activa y el resumen al cerrar.

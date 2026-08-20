@@ -1,6 +1,8 @@
 import '../models/producto.dart';
+import '../models/promocion.dart';
 import '../services/firebase_service.dart';
 import '../services/cart_service.dart';
+import '../services/promociones_service.dart';
 
 /// Definiciones de las tools que la IA puede usar, en el formato que
 /// espera la API de Claude (tool use / function calling).
@@ -15,6 +17,59 @@ class ToolsIA {
   /// Se pone en true cuando agregar_al_carrito tuvo éxito en el turno
   /// actual, para que la pantalla de chat muestre el botón "Ver carrito".
   static bool seAgregoAlCarrito = false;
+
+  /// Guarda las promociones consultadas en el turno actual, para que la
+  /// pantalla de chat muestre sus imágenes.
+  static List<Promocion> ultimasPromosMostradas = [];
+
+  static const Map<String, List<String>> _recetasConocidas = {
+    'sancocho': [
+      '01004', // Cebolla Roja Criolla
+      'A00002', // Plátano Verde
+      'A6954821584253', // Ajo Selecto
+      'A2100003188489', // Orégano Molido Wala
+      'A2100003198181', // Sazón Completo Wala
+      'A2100002986895', // Sal Refinada Wala
+      'A2100003032201', // Vinagre Blanco Wala
+      'A7468827171465', // Cilantro Ancho
+      '02296', // Yuca Parafinada
+      '01007', // Ñame Fresco
+      '01010', // Yautía Blanca
+      '02012', // Auyama Criolla
+      '01002', // Batata Fresca
+      '06003', // Filete Pechuga Pollo Cibao
+      '05044', // Chuleta Cerdo Ahumada
+    ],
+  };
+
+  static Future<Map<String, dynamic>> _armarListaReceta(
+      Map<String, dynamic> input,
+      ) async {
+    final receta = (input['receta'] as String? ?? '').toLowerCase().trim();
+    final codigos = _recetasConocidas[receta];
+
+    if (codigos == null) {
+      return {
+        'encontrada': false,
+        'mensaje': 'No tengo esa receta precargada todavía.',
+      };
+    }
+
+    final productos = <Producto>[];
+    for (final codigo in codigos) {
+      final producto = await _firebaseService.obtenerProductoPorCodigo(codigo);
+      if (producto != null) productos.add(producto);
+    }
+
+    ultimosProductosMostrados.addAll(productos);
+
+    return {
+      'encontrada': true,
+      'receta': receta,
+      'total_ingredientes': productos.length,
+      'productos': productos.map(_productoParaIA).toList(),
+    };
+  }
 
   static List<Map<String, dynamic>> get definiciones => [
     {
@@ -134,6 +189,38 @@ class ToolsIA {
         'required': ['codigo_barra'],
       },
     },
+    {
+      'name': 'consultar_ofertas',
+      'description':
+      'Consulta las promociones y ofertas activas de Sirena. Úsala cuando '
+          'el usuario pregunte por ofertas, promociones, especiales del día, '
+          'o descuentos.',
+      'input_schema': {
+        'type': 'object',
+        'properties': {},
+      },
+
+    },
+
+    {
+      'name': 'armar_lista_receta',
+      'description':
+      'Arma la lista de ingredientes EXACTA y ya verificada para una receta '
+          'dominicana específica que tenemos precargada (por ahora: sancocho). '
+          'Úsala SIEMPRE que el usuario pida ingredientes/lista para hacer '
+          'sancocho, en vez de buscar_producto — esta lista ya está curada y '
+          'evita resultados incorrectos.',
+      'input_schema': {
+        'type': 'object',
+        'properties': {
+          'receta': {
+            'type': 'string',
+            'description': 'Nombre de la receta. Valores válidos: "sancocho"',
+          },
+        },
+        'required': ['receta'],
+      },
+    },
   ];
 
   static Future<Map<String, dynamic>> ejecutar(
@@ -151,6 +238,10 @@ class ToolsIA {
         return _armarListaPorPresupuesto(input);
       case 'agregar_al_carrito':
         return _agregarAlCarrito(input);
+      case 'consultar_ofertas':
+        return _consultarOfertas();
+      case 'armar_lista_receta':
+        return _armarListaReceta(input);
       default:
         return {'error': 'Tool desconocida: $nombreTool'};
     }
@@ -164,7 +255,7 @@ class ToolsIA {
 
     if (resultados.isEmpty) {
       return {
-        'encontrados': 0, 
+        'encontrados': 0,
         'mensaje': 'No se encontró nada exacto en el catálogo parecido a: $descripcion'
       };
     }
@@ -288,6 +379,17 @@ class ToolsIA {
       'agregado': producto.tipoVenta == 'peso_variable'
           ? '$libras lb'
           : '$cantidad unidad(es)',
+    };
+  }
+
+  static Map<String, dynamic> _consultarOfertas() {
+    final promos = PromocionesService.promociones;
+    ultimasPromosMostradas = promos;
+
+    return {
+      'ofertas_activas': promos
+          .map((p) => {'titulo': p.titulo, 'descripcion': p.descripcion})
+          .toList(),
     };
   }
 

@@ -68,6 +68,7 @@ flutter:
     - assets/data/
     - assets/branding/
     - assets/mapas_preview/
+    - assets/promociones/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

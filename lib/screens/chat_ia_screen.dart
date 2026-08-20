@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
 import '../models/producto.dart';
+import '../models/promocion.dart';
 import '../services/claude_service.dart';
 import '../services/tools_ia.dart';
 import '../services/local_storage_service.dart';
@@ -138,11 +139,13 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
 
     ToolsIA.ultimosProductosMostrados = [];
     ToolsIA.seAgregoAlCarrito = false;
+    ToolsIA.ultimasPromosMostradas = [];
 
     try {
       final resp = await ClaudeService().enviarMensajeConTools(texto);
       final textoRespuesta = ClaudeService().extraerTexto(resp);
       final productos = List<Producto>.from(ToolsIA.ultimosProductosMostrados);
+      final promos = List<Promocion>.from(ToolsIA.ultimasPromosMostradas);
 
       setState(() {
         _mensajes.add(ChatMessage(
@@ -150,6 +153,8 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
           esDeUsuario: false,
           productos: productos.isNotEmpty ? productos : null,
           mostrarBotonCarrito: ToolsIA.seAgregoAlCarrito,
+          imagenesPromo:
+          promos.isNotEmpty ? promos.map((p) => p.imagenAsset).toList() : null,
         ));
         _cargando = false;
       });
@@ -244,6 +249,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
 
     ToolsIA.ultimosProductosMostrados = [];
     ToolsIA.seAgregoAlCarrito = false;
+    ToolsIA.ultimasPromosMostradas = [];
 
     try {
       final resp = await ClaudeService().enviarMensajeConTools(
@@ -445,6 +451,16 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
         ),
         if (mensaje.productos != null && mensaje.productos!.isNotEmpty)
           ...mensaje.productos!.map((p) => _buildTarjetaProducto(p)),
+        if (mensaje.imagenesPromo != null && mensaje.imagenesPromo!.isNotEmpty)
+          ...mensaje.imagenesPromo!.map((ruta) => Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+            child: AspectRatio(
+              aspectRatio: 950 / 522,
+              child: Image.asset(ruta, fit: BoxFit.cover),
+            ),
+          )),
         if (mensaje.mostrarBotonCarrito)
           Padding(
             padding: const EdgeInsets.only(top: 4),
@@ -568,25 +584,34 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       ),
       child: SafeArea(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end, // ← los íconos quedan abajo mientras el campo crece hacia arriba
           children: [
             Expanded(
-              child: TextField(
-                controller: _inputController,
-                style: TextStyle(color: _modoOscuro ? AppColors.blanco : AppColors.negro),
-                decoration: InputDecoration(
-                  hintText: 'Escribe tu mensaje...',
-                  hintStyle: TextStyle(
-                    color: _modoOscuro ? Colors.grey.shade500 : Colors.grey.shade600,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 120), // ← límite de crecimiento
+                child: SingleChildScrollView(
+                  reverse: true, // ← siempre muestra el final del texto (donde escribes) cuando hace scroll interno
+                  child: TextField(
+                    controller: _inputController,
+                    minLines: 1,
+                    maxLines: null, // ← permite crecer verticalmente sin límite propio (lo limita el ConstrainedBox de afuera)
+                    keyboardType: TextInputType.multiline,
+                    style: TextStyle(color: _modoOscuro ? AppColors.blanco : AppColors.negro),
+                    decoration: InputDecoration(
+                      hintText: 'Escribe tu mensaje...',
+                      hintStyle: TextStyle(
+                        color: _modoOscuro ? Colors.grey.shade500 : Colors.grey.shade600,
+                      ),
+                      filled: true,
+                      fillColor: _modoOscuro ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    ),
                   ),
-                  filled: true,
-                  fillColor: _modoOscuro ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
-                onSubmitted: (_) => _enviarMensaje(),
               ),
             ),
             const SizedBox(width: 8),
