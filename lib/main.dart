@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:sirena_alphaweek/services/carga_productos_sancocho.dart';
 import 'services/local_storage_service.dart';
 import 'services/firebase_service.dart';
 import 'services/accessibility_service.dart';
@@ -14,6 +15,7 @@ void main() async {
   await LocalStorageService.init();
   await AccessibilityService.init();
   await FirebaseService().precargarProductos();
+  await cargarProductosSancocho();
   runApp(const MyApp());
 }
 

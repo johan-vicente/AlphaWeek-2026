@@ -166,6 +166,17 @@ Future<void> cargarProductosSancocho() async {
       'https://gruporamos.vtexassets.com/arquivos/ids/175057-800-800?v=639154047047570000&width=800&height=800&aspect=true',
       'sucursales': todasLasSucursales,
     },
+
+    'A2100003356987': {
+      'codigo_barra': 'A2100003356987',
+      'nombre': 'Papas Fritas con Limon Wala 55 Gr',
+      'tipo_venta': 'empacado',
+      'precio': 65,
+      'categoria': 'Picadera / Papitas y Chips',
+      'imagen_url':
+      'https://gruporamos.vtexassets.com/arquivos/ids/177623-800-800?v=639203445701630000&width=800&height=800&aspect=true',
+      'sucursales': todasLasSucursales,
+    },
   };
 
   await db.update(productos);
